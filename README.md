@@ -119,4 +119,3 @@ docker-compose down -v
 
 ## Licencia
 
-Este proyecto es parte de un trabajo académico.
