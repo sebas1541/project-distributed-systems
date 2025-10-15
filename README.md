@@ -35,7 +35,7 @@ Desarrollar una aplicación web distribuida e inteligente que permita gestionar 
 
 1. Clonar el repositorio:
 ```bash
-git clone <repository-url>
+git clone https://github.com/sebas1541/project-distributed-systems
 cd project-distributed-systems
 ```
 
