@@ -100,19 +100,6 @@ docker-compose down
 # Detener y eliminar volúmenes
 docker-compose down -v
 ```
-
-## Cronograma
-
-| Semana | Actividad |
-|--------|-----------|
-| 7-13 oct | Entorno base Docker (NestJS, RabbitMQ) |
-| 14-20 oct | Frontend React + Tailwind |
-| 21-27 oct | Backend + API Gateway + RabbitMQ |
-| 28 oct-3 nov | Servicio NLP (LangChain) |
-| 4-10 nov | Servicio Scheduler |
-| 11-17 nov | Task Insights (CrewAI) |
-| 18-24 nov | Integración final y presentación |
-
 ## Enlaces
 
 - [Diagrama de Arquitectura](https://drive.google.com/file/d/1EG13F8j1EkPJFaTDMNI6yVMAld80QVIJ/view?usp=sharing)
