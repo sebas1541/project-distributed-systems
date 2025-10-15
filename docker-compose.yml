@@ -1,0 +1,144 @@
+services:
+  # Traefik - API Gateway
+  traefik:
+    image: traefik:v2.10
+    container_name: smartplanner-traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"  # Traefik Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - smartplanner-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: smartplanner-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-smartplanner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartplanner_password}
+      POSTGRES_DB: ${POSTGRES_DB:-smartplanner_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - smartplanner-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-smartplanner}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: smartplanner-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - smartplanner-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: smartplanner-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-smartplanner}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-rabbitmq_password}
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - smartplanner-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+      target: production
+    container_name: smartplanner-auth-service
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${AUTH_SERVICE_PORT:-3001}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-7d}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smartplanner-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth-service.rule=PathPrefix(`/api/auth`)"
+      - "traefik.http.services.auth-service.loadbalancer.server.port=3001"
+
+  # Task Service
+  task-service:
+    build:
+      context: ./services/task-service
+      dockerfile: Dockerfile
+      target: production
+    container_name: smartplanner-task-service
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${TASK_SERVICE_PORT:-3002}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smartplanner-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.task-service.rule=PathPrefix(`/api/tasks`)"
+      - "traefik.http.services.task-service.loadbalancer.server.port=3002"
+
+networks:
+  smartplanner-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:
