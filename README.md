@@ -103,6 +103,7 @@ docker-compose down -v
 ## Enlaces
 
 - [Diagrama de Arquitectura](https://drive.google.com/file/d/1EG13F8j1EkPJFaTDMNI6yVMAld80QVIJ/view?usp=sharing)
+- [Documento de propuesta del proyecto](https://docs.google.com/document/d/1fnxLbS5zKIFwdc8Tz4KnoruemRsnryi9glD7_ytSo5Y/edit?tab=t.0).
 
 ## Licencia
 
