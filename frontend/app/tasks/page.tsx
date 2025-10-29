@@ -38,6 +38,7 @@ export default function TasksPage() {
     } finally {
       setIsLoading(false);
     }
+    
   };
 
   const filterTasks = () => {

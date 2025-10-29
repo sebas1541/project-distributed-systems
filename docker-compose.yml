@@ -134,19 +134,21 @@ services:
       - "traefik.http.routers.task-service.rule=PathPrefix(`/api/tasks`)"
       - "traefik.http.services.task-service.loadbalancer.server.port=3002"
 
-  # AI Service (Whisper.cpp Transcription)
+  # AI Service - Whisper.cpp built inside container
   ai-service:
     build:
       context: ./services/ai-service
-      dockerfile: Dockerfile
-      target: production
+      dockerfile: Dockerfile.local
     container_name: smartplanner-ai-service
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${AI_SERVICE_PORT:-3003}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      # Whisper.cpp built inside container
+      WHISPER_PATH: /app/whisper.cpp/build/bin/whisper-cli
+      WHISPER_MODEL_PATH: /app/whisper.cpp/models/ggml-base.bin
     volumes:
-      # Only mount uploads directory for temporary files
+      # Mount uploads directory only
       - ./services/ai-service/uploads:/app/uploads
     networks:
       - smartplanner-network
