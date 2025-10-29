@@ -1,160 +1,163 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Activity, CheckCircle, Clock, Plus, TrendingUp } from "lucide-react";
+import { Activity, CheckCircle, Clock, TrendingUp, ArrowRight } from "lucide-react";
+import { tasksApi } from '@/features/tasks';
+import { Task, TaskStatus } from '@/types/task.types';
 
 export default function Home() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const loadTasks = async () => {
+    try {
+      const allTasks = await tasksApi.getTasks();
+      setTasks(allTasks);
+    } catch (error) {
+      console.error('Failed to load tasks:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const completedTasks = tasks.filter(t => t.status === TaskStatus.COMPLETED).length;
+  const pendingTasks = tasks.filter(t => t.status === TaskStatus.PENDING).length;
+  const inProgressTasks = tasks.filter(t => t.status === TaskStatus.IN_PROGRESS).length;
+
   return (
-    <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          ¡Bienvenido de vuelta! 👋
-        </h2>
-        <p className="text-gray-600 text-lg">
-          Aquí está tu resumen de hoy
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Total Tareas</p>
-                <p className="text-3xl font-bold text-gray-900">24</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Completadas</p>
-                <p className="text-3xl font-bold text-green-600">18</p>
-              </div>
-              <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Pendientes</p>
-                <p className="text-3xl font-bold text-orange-600">6</p>
-              </div>
-              <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center">
-                <Clock className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Productividad</p>
-                <p className="text-3xl font-bold text-purple-600">75%</p>
-              </div>
-              <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
-                <Activity className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Tareas Recientes</CardTitle>
-                <CardDescription>Tus últimas actividades</CardDescription>
-              </div>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Nueva Tarea
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-4 bg-gray-50/50 rounded-xl border border-gray-200/30">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <div>
-                  <p className="font-medium text-gray-500 line-through">
-                    Revisar documentación del proyecto
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Prioridad: <span className="font-medium text-orange-600">alta</span>
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-gray-50/50 rounded-xl border border-gray-200/30">
-                <div className="w-2 h-2 rounded-full bg-gray-400" />
-                <div>
-                  <p className="font-medium text-gray-900">
-                    Reunión con el equipo de desarrollo
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Prioridad: <span className="font-medium text-red-600">urgente</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Acciones Rápidas</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
-                <Plus className="h-4 w-4 mr-2" />
-                Crear Tarea
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Clock className="h-4 w-4 mr-2" />
-                Ver Calendario
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Progreso Semanal</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600">Completadas</span>
-                    <span className="font-medium text-gray-900">18/24</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full" style={{ width: '75%' }} />
-                  </div>
-                </div>
-                <div className="pt-4 border-t border-gray-100">
-                  <p className="text-sm text-gray-600 mb-2">Racha actual</p>
-                  <p className="text-2xl font-bold text-blue-600">7 días 🔥</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+    <AuthenticatedLayout>
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            ¡Bienvenido de vuelta! 👋
+          </h2>
+          <p className="text-gray-600 text-lg">
+            Aquí está tu resumen de hoy
+          </p>
         </div>
-      </div>
-    </main>
+
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 mb-1">Total Tareas</p>
+                      <p className="text-3xl font-bold text-gray-900">{tasks.length}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-blue-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 mb-1">Completadas</p>
+                      <p className="text-3xl font-bold text-green-600">{completedTasks}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                      <TrendingUp className="h-6 w-6 text-green-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 mb-1">Pendientes</p>
+                      <p className="text-3xl font-bold text-orange-600">{pendingTasks}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center">
+                      <Clock className="h-6 w-6 text-orange-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 mb-1">En Progreso</p>
+                      <p className="text-3xl font-bold text-purple-600">{inProgressTasks}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                      <Activity className="h-6 w-6 text-purple-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {tasks.length > 0 && (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Tareas Recientes
+                    </h3>
+                    <Link href="/tasks">
+                      <Button variant="ghost" size="sm">
+                        Ver todas
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </Link>
+                  </div>
+                  <div className="space-y-3">
+                    {tasks.slice(0, 5).map((task) => (
+                      <div
+                        key={task.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{task.title}</p>
+                          {task.description && (
+                            <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                          )}
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            task.status === TaskStatus.COMPLETED
+                              ? 'bg-green-100 text-green-700'
+                              : task.status === TaskStatus.IN_PROGRESS
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-orange-100 text-orange-700'
+                          }`}
+                        >
+                          {task.status === TaskStatus.COMPLETED
+                            ? 'Completada'
+                            : task.status === TaskStatus.IN_PROGRESS
+                            ? 'En Progreso'
+                            : 'Pendiente'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
+      </main>
+    </AuthenticatedLayout>
   );
 }

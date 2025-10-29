@@ -1,98 +1,233 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, Circle, Clock, Search } from "lucide-react";
+'use client';
+
+import { useEffect, useState } from 'react';
+import AuthenticatedLayout from '@/components/AuthenticatedLayout';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CheckCircle, Clock, Plus, Search } from 'lucide-react';
+import { tasksApi } from '@/features/tasks';
+import { Task, TaskStatus } from '@/types/task.types';
+import { TaskItem } from '@/components/TaskItem';
+import { CreateTaskModal } from '@/components/CreateTaskModal';
 
 export default function TasksPage() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  useEffect(() => {
+    filterTasks();
+  }, [tasks, searchQuery, activeTab]);
+
+  const loadTasks = async () => {
+    try {
+      setIsLoading(true);
+      const allTasks = await tasksApi.getTasks();
+      setTasks(allTasks);
+    } catch (error) {
+      console.error('Failed to load tasks:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filterTasks = () => {
+    let filtered = [...tasks];
+
+    // Filter by status based on active tab
+    if (activeTab === 'pending') {
+      filtered = filtered.filter((t) => t.status === TaskStatus.PENDING);
+    } else if (activeTab === 'in_progress') {
+      filtered = filtered.filter((t) => t.status === TaskStatus.IN_PROGRESS);
+    } else if (activeTab === 'completed') {
+      filtered = filtered.filter((t) => t.status === TaskStatus.COMPLETED);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (t) =>
+          t.title.toLowerCase().includes(query) ||
+          t.description?.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredTasks(filtered);
+  };
+
+  const handleTaskCreated = () => {
+    loadTasks();
+  };
+
+  const handleTaskUpdated = () => {
+    loadTasks();
+  };
+
   return (
-    <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Mis Tareas
-        </h2>
-        <p className="text-gray-600 text-lg">
-          Gestiona y organiza tus actividades
-        </p>
-      </div>
-
-      <div className="mb-6 flex gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Buscar tareas..."
-              className="pl-10"
-            />
-          </div>
+    <AuthenticatedLayout>
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Mis Tareas</h2>
+          <p className="text-gray-600 text-lg">
+            Gestiona y organiza tus actividades
+          </p>
         </div>
-        <Button>
-          Nueva Tarea
-        </Button>
-      </div>
 
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="all">
-            Todas
-          </TabsTrigger>
-          <TabsTrigger value="pending">
-            Pendientes
-          </TabsTrigger>
-          <TabsTrigger value="completed">
-            Completadas
-          </TabsTrigger>
-        </TabsList>
+        <div className="mb-6 flex gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Buscar tareas..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+          <Button onClick={() => setShowCreateModal(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Tarea
+          </Button>
+        </div>
 
-        <TabsContent value="all" className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <button className="mt-1">
-                    <Circle className="h-5 w-5 text-gray-400 hover:text-blue-500 transition-colors" />
-                  </button>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-2">
-                      Tarea de ejemplo {i}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Descripción de la tarea con detalles importantes
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>Hoy, 14:00</span>
-                      </div>
-                      <span className="px-2 py-1 bg-orange-50 text-orange-600 rounded-lg font-medium">
-                        Alta
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
+          <TabsList className="mb-6">
+            <TabsTrigger value="all">Todas ({tasks.length})</TabsTrigger>
+            <TabsTrigger value="pending">
+              Pendientes (
+              {tasks.filter((t) => t.status === TaskStatus.PENDING).length})
+            </TabsTrigger>
+            <TabsTrigger value="in_progress">
+              En Progreso (
+              {tasks.filter((t) => t.status === TaskStatus.IN_PROGRESS).length})
+            </TabsTrigger>
+            <TabsTrigger value="completed">
+              Completadas (
+              {tasks.filter((t) => t.status === TaskStatus.COMPLETED).length})
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="pending">
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No hay tareas pendientes</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <>
+              <TabsContent value="all" className="space-y-4">
+                {filteredTasks.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">
+                        {searchQuery
+                          ? 'No se encontraron tareas'
+                          : 'No tienes tareas creadas'}
+                      </p>
+                      {!searchQuery && (
+                        <Button
+                          className="mt-4"
+                          onClick={() => setShowCreateModal(true)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Crear tu primera tarea
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  filteredTasks.map((task) => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onTaskUpdated={handleTaskUpdated}
+                    />
+                  ))
+                )}
+              </TabsContent>
 
-        <TabsContent value="completed">
-          <Card>
-            <CardContent className="p-12 text-center">
-              <CheckCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No hay tareas completadas</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </main>
+              <TabsContent value="pending" className="space-y-4">
+                {filteredTasks.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">No hay tareas pendientes</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  filteredTasks.map((task) => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onTaskUpdated={handleTaskUpdated}
+                    />
+                  ))
+                )}
+              </TabsContent>
+
+              <TabsContent value="in_progress" className="space-y-4">
+                {filteredTasks.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">
+                        No hay tareas en progreso
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  filteredTasks.map((task) => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onTaskUpdated={handleTaskUpdated}
+                    />
+                  ))
+                )}
+              </TabsContent>
+
+              <TabsContent value="completed" className="space-y-4">
+                {filteredTasks.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-12 text-center">
+                      <CheckCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500">No hay tareas completadas</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  filteredTasks.map((task) => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onTaskUpdated={handleTaskUpdated}
+                    />
+                  ))
+                )}
+              </TabsContent>
+            </>
+          )}
+        </Tabs>
+      </main>
+
+      <CreateTaskModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onTaskCreated={handleTaskCreated}
+      />
+    </AuthenticatedLayout>
   );
 }
