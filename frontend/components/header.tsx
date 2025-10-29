@@ -72,8 +72,14 @@ export function Header() {
           </div>
 
           {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden mt-4 pb-4 border-t border-gray-200 pt-4">
+          <div
+            className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+              mobileMenuOpen
+                ? 'max-h-96 opacity-100 mt-4 border-t border-gray-200 pt-4'
+                : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="pb-4">
               <Navigation />
               
               {user && (
@@ -99,7 +105,7 @@ export function Header() {
                 </div>
               )}
             </div>
-          )}
+          </div>
         </div>
       </header>
 
