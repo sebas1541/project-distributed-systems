@@ -19,7 +19,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+  // Suppress hydration warnings at the root to avoid noisy warnings when
+  // browser extensions (e.g. LanguageTool / Grammarly) inject attributes
+  // into the DOM before React hydrates. Prefer disabling extensions in
+  // development if you want the strict warning to appear.
+  <html lang="es" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
           <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
