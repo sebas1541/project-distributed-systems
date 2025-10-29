@@ -37,7 +37,7 @@ export default function Home() {
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="mb-6 sm:mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            ¡Bienvenido de vuelta! 👋
+            ¡Bienvenido de vuelta!
           </h2>
           <p className="text-gray-600 text-base sm:text-lg">
             Aquí está tu resumen de hoy
