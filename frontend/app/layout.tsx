@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/header";
+import { AuthProvider } from "@/features/auth";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,10 +21,11 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${inter.variable} font-sans antialiased`}>
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
-          <Header />
-          {children}
-        </div>
+        <AuthProvider>
+          <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
+            {children}
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );
