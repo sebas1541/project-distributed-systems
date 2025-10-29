@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,11 +67,16 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-blue-50/30 p-3 sm:p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-3 sm:space-y-4 text-center pb-6 sm:pb-8">
-          <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-xl sm:text-2xl">SP</span>
+          <div className="mx-auto">
+            <Image 
+              src="/logo.png" 
+              alt="Smart Planner AI Logo" 
+              width={160} 
+              height={53}
+              className="h-12 sm:h-16 w-auto object-contain mx-auto"
+            />
           </div>
           <div>
-            <CardTitle className="text-xl sm:text-2xl">Smart Planner AI</CardTitle>
             <CardDescription className="text-sm sm:text-base mt-2">
               {isLogin ? 'Inicia sesión para continuar' : 'Crea tu cuenta'}
             </CardDescription>
