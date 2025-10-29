@@ -14,16 +14,29 @@ export default function AuthenticatedLayout({
   const [isRecordingOpen, setIsRecordingOpen] = useState(false);
 
   const handleRecordingComplete = async (audioBlob: Blob) => {
-    console.log('Audio recorded:', audioBlob);
-    console.log('Audio size:', audioBlob.size, 'bytes');
-    console.log('Audio type:', audioBlob.type);
+    console.log('🎤 Audio recorded:', audioBlob);
+    console.log('📊 Audio size:', audioBlob.size, 'bytes');
+    console.log('🎵 Audio type:', audioBlob.type);
     
-    // TODO: Send to backend for processing with Whisper
-    // For now, just close the modal
-    setTimeout(() => {
+    try {
+      // Import the AI API
+      const { aiApi } = await import('@/lib/aiApi');
+      
+      console.log('🚀 Sending audio to AI service via Traefik...');
+      const result = await aiApi.transcribe(audioBlob);
+      
+      console.log('✅ Transcription received:', result.transcription);
+      
+      // TODO: Parse transcription with LLM and create task
+      // For now, just show the transcription
+      alert(`Transcripción: ${result.transcription}`);
+      
+    } catch (error) {
+      console.error('Transcription error:', error);
+      alert('Error al procesar el audio. Por favor intenta nuevamente.');
+    } finally {
       setIsRecordingOpen(false);
-      // Show success message or open task creation with transcription
-    }, 1000);
+    }
   };
 
   return (

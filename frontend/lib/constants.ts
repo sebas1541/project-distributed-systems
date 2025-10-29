@@ -11,9 +11,13 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string) => `/api/tasks/${id}`,
     UPCOMING: '/api/tasks/upcoming',
   },
+  AI: {
+    TRANSCRIBE: '/api/ai/transcribe',
+  },
 } as const;
 
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: 'access_token',
   USER: 'user',
 } as const;
+
