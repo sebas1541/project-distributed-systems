@@ -134,6 +134,27 @@ services:
       - "traefik.http.routers.task-service.rule=PathPrefix(`/api/tasks`)"
       - "traefik.http.services.task-service.loadbalancer.server.port=3002"
 
+  # AI Service (Whisper.cpp Transcription)
+  ai-service:
+    build:
+      context: ./services/ai-service
+      dockerfile: Dockerfile
+      target: production
+    container_name: smartplanner-ai-service
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${AI_SERVICE_PORT:-3003}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    volumes:
+      # Only mount uploads directory for temporary files
+      - ./services/ai-service/uploads:/app/uploads
+    networks:
+      - smartplanner-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ai-service.rule=PathPrefix(`/api/ai`)"
+      - "traefik.http.services.ai-service.loadbalancer.server.port=3003"
+
 networks:
   smartplanner-network:
     driver: bridge

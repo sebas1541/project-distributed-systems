@@ -35,3 +35,8 @@ coverage/
 # Temporary files
 *.tmp
 .cache/
+
+# AI Service - Whisper.cpp (large files, should be built locally)
+services/ai-service/whisper.cpp/
+services/ai-service/uploads/
+services/ai-service/dist/
