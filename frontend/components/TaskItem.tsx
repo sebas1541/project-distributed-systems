@@ -93,12 +93,12 @@ export function TaskItem({ task, onTaskUpdated }: TaskItemProps) {
 
   return (
     <Card className={isDeleting ? 'opacity-50' : ''}>
-      <CardContent className="p-6">
-        <div className="flex items-start gap-4">
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-start gap-3 sm:gap-4">
           <button
             onClick={toggleTaskStatus}
             disabled={isUpdating || isDeleting}
-            className="mt-1 disabled:opacity-50"
+            className="mt-1 disabled:opacity-50 flex-shrink-0"
           >
             {task.status === TaskStatus.COMPLETED ? (
               <CheckCircle className="h-5 w-5 text-green-500" />
@@ -107,9 +107,9 @@ export function TaskItem({ task, onTaskUpdated }: TaskItemProps) {
             )}
           </button>
 
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h3
-              className={`font-semibold text-gray-900 mb-2 ${
+              className={`font-semibold text-gray-900 mb-2 break-words ${
                 task.status === TaskStatus.COMPLETED ? 'line-through text-gray-500' : ''
               }`}
             >
@@ -117,19 +117,19 @@ export function TaskItem({ task, onTaskUpdated }: TaskItemProps) {
             </h3>
 
             {task.description && (
-              <p className="text-sm text-gray-600 mb-3">{task.description}</p>
+              <p className="text-sm text-gray-600 mb-3 break-words">{task.description}</p>
             )}
 
-            <div className="flex items-center gap-3 text-xs flex-wrap">
+            <div className="flex items-center gap-2 sm:gap-3 text-xs flex-wrap">
               {task.dueDate && (
                 <div className="flex items-center gap-1 text-gray-500">
-                  <Clock className="h-3 w-3" />
-                  <span>{formatDate(task.dueDate)}</span>
+                  <Clock className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{formatDate(task.dueDate)}</span>
                 </div>
               )}
 
               <span
-                className={`px-2 py-1 rounded-lg font-medium ${
+                className={`px-2 py-1 rounded-lg font-medium whitespace-nowrap ${
                   priorityColors[task.priority]
                 }`}
               >
@@ -137,7 +137,7 @@ export function TaskItem({ task, onTaskUpdated }: TaskItemProps) {
               </span>
 
               <span
-                className={`px-2 py-1 rounded-lg font-medium ${
+                className={`px-2 py-1 rounded-lg font-medium whitespace-nowrap ${
                   statusColors[task.status]
                 }`}
               >
@@ -157,7 +157,7 @@ export function TaskItem({ task, onTaskUpdated }: TaskItemProps) {
             size="sm"
             onClick={handleDeleteClick}
             disabled={isDeleting}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
