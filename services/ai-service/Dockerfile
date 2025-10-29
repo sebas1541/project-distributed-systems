@@ -19,9 +19,13 @@ RUN npm ci
 # Clone and build whisper.cpp
 RUN git clone https://github.com/ggerganov/whisper.cpp.git && \
     cd whisper.cpp && \
-    make && \
-    cd models && \
-    bash download-ggml-model.sh base
+    make
+
+# Download whisper model manually (Alpine's BusyBox wget has limited options)
+RUN cd whisper.cpp/models && \
+    wget -q https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin \
+    -O ggml-base.bin && \
+    ls -lh ggml-base.bin
 
 # Copy source code
 COPY . .

@@ -9,11 +9,11 @@ const execAsync = promisify(exec);
 @Injectable()
 export class TranscribeService {
   private readonly logger = new Logger(TranscribeService.name);
-  private readonly whisperPath = join(
+  private readonly whisperPath = process.env.WHISPER_PATH || join(
     __dirname,
     '../../whisper.cpp/build/bin/whisper-cli',
   );
-  private readonly modelPath = join(
+  private readonly modelPath = process.env.WHISPER_MODEL_PATH || join(
     __dirname,
     '../../whisper.cpp/models/ggml-base.bin',
   );
@@ -21,9 +21,18 @@ export class TranscribeService {
   async transcribe(audioFilePath: string): Promise<string> {
     this.logger.log(`Starting transcription for: ${audioFilePath}`);
 
+    let wavFilePath: string | null = null;
+
     try {
-      // Call whisper.cpp with the audio file
-      const command = `${this.whisperPath} -m ${this.modelPath} -f ${audioFilePath} --output-txt --output-file /tmp/whisper-output`;
+      // Convert to WAV format for Whisper.cpp
+      wavFilePath = audioFilePath.replace(/\.[^.]+$/, '.wav');
+      const convertCommand = `ffmpeg -i ${audioFilePath} -ar 16000 -ac 1 -c:a pcm_s16le ${wavFilePath}`;
+      
+      this.logger.log(`Converting audio: ${convertCommand}`);
+      await execAsync(convertCommand);
+
+      // Call whisper.cpp with the WAV file
+      const command = `${this.whisperPath} -m ${this.modelPath} -f ${wavFilePath} --output-txt --output-file /tmp/whisper-output`;
 
       this.logger.log(`Executing command: ${command}`);
 
@@ -40,17 +49,25 @@ export class TranscribeService {
       // Parse the output to extract just the transcribed text
       const transcription = this.parseWhisperOutput(stdout);
 
-      // Clean up the uploaded audio file
+      // Clean up both audio files
       await unlink(audioFilePath).catch((err) =>
-        this.logger.warn(`Failed to delete file: ${err.message}`),
+        this.logger.warn(`Failed to delete original file: ${err.message}`),
       );
+      if (wavFilePath) {
+        await unlink(wavFilePath).catch((err) =>
+          this.logger.warn(`Failed to delete WAV file: ${err.message}`),
+        );
+      }
 
       this.logger.log(`Transcription completed: ${transcription}`);
       return transcription;
     } catch (error) {
       this.logger.error(`Transcription error: ${error.message}`);
-      // Clean up the uploaded audio file even on error
+      // Clean up both files even on error
       await unlink(audioFilePath).catch(() => {});
+      if (wavFilePath) {
+        await unlink(wavFilePath).catch(() => {});
+      }
       throw new Error(`Whisper transcription failed: ${error.message}`);
     }
   }

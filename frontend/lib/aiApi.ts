@@ -14,10 +14,10 @@ export const aiApi = {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'recording.webm');
 
+    // AI service runs locally but proxied through Traefik
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost'}${API_ENDPOINTS.AI.TRANSCRIBE}`, {
       method: 'POST',
       body: formData,
-      // Don't set Content-Type header - browser will set it with boundary
     });
 
     if (!response.ok) {

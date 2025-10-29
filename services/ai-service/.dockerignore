@@ -1,0 +1,8 @@
+node_modules
+dist
+npm-debug.log
+.env
+.env.local
+whisper.cpp
+uploads/*
+!uploads/.gitignore
