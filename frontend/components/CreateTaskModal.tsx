@@ -71,19 +71,19 @@ export function CreateTaskModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5 text-blue-600" />
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
             Nueva Tarea
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             Crea una nueva tarea para gestionar tus actividades
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
+          <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
             <div className="space-y-2">
               <label htmlFor="title" className="text-sm font-medium text-gray-700">
                 Título *
@@ -112,7 +112,7 @@ export function CreateTaskModal({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <label htmlFor="priority" className="text-sm font-medium text-gray-700">
                   Prioridad
@@ -141,27 +141,29 @@ export function CreateTaskModal({
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
                   disabled={isSubmitting}
+                  className="text-sm"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-xs sm:text-sm text-red-600">{error}</p>
               </div>
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className="w-full sm:w-auto text-sm"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto text-sm">
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>

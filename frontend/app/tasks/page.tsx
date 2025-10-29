@@ -77,13 +77,13 @@ export default function TasksPage() {
     <AuthenticatedLayout>
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="mb-6">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Mis Tareas</h2>
-          <p className="text-gray-600 text-lg">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Mis Tareas</h2>
+          <p className="text-gray-600 text-base sm:text-lg">
             Gestiona y organiza tus actividades
           </p>
         </div>
 
-        <div className="mb-6 flex gap-4">
+        <div className="mb-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -95,7 +95,7 @@ export default function TasksPage() {
               />
             </div>
           </div>
-          <Button onClick={() => setShowCreateModal(true)}>
+          <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Nueva Tarea
           </Button>
@@ -106,18 +106,24 @@ export default function TasksPage() {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <TabsList className="mb-6">
-            <TabsTrigger value="all">Todas ({tasks.length})</TabsTrigger>
-            <TabsTrigger value="pending">
-              Pendientes (
+          <TabsList className="mb-6 w-full flex-wrap h-auto">
+            <TabsTrigger value="all" className="flex-1 min-w-[80px]">
+              <span className="hidden sm:inline">Todas</span>
+              <span className="sm:hidden">Todo</span> ({tasks.length})
+            </TabsTrigger>
+            <TabsTrigger value="pending" className="flex-1 min-w-[80px]">
+              <span className="hidden sm:inline">Pendientes</span>
+              <span className="sm:hidden">Pend.</span> (
               {tasks.filter((t) => t.status === TaskStatus.PENDING).length})
             </TabsTrigger>
-            <TabsTrigger value="in_progress">
-              En Progreso (
+            <TabsTrigger value="in_progress" className="flex-1 min-w-[80px]">
+              <span className="hidden sm:inline">En Progreso</span>
+              <span className="sm:hidden">Prog.</span> (
               {tasks.filter((t) => t.status === TaskStatus.IN_PROGRESS).length})
             </TabsTrigger>
-            <TabsTrigger value="completed">
-              Completadas (
+            <TabsTrigger value="completed" className="flex-1 min-w-[80px]">
+              <span className="hidden sm:inline">Completadas</span>
+              <span className="sm:hidden">Comp.</span> (
               {tasks.filter((t) => t.status === TaskStatus.COMPLETED).length})
             </TabsTrigger>
           </TabsList>

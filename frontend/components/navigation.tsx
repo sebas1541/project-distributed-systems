@@ -14,7 +14,7 @@ export function Navigation() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex items-center gap-2">
+    <nav className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
       {navigation.map((item) => {
         const isActive = pathname === item.href;
         const Icon = item.icon;

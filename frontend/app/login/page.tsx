@@ -63,21 +63,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-blue-50/30 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-blue-50/30 p-3 sm:p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-4 text-center pb-8">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-2xl">SP</span>
+        <CardHeader className="space-y-3 sm:space-y-4 text-center pb-6 sm:pb-8">
+          <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <span className="text-white font-bold text-xl sm:text-2xl">SP</span>
           </div>
           <div>
-            <CardTitle className="text-2xl">Smart Planner AI</CardTitle>
-            <CardDescription className="text-base mt-2">
+            <CardTitle className="text-xl sm:text-2xl">Smart Planner AI</CardTitle>
+            <CardDescription className="text-sm sm:text-base mt-2">
               {isLogin ? 'Inicia sesión para continuar' : 'Crea tu cuenta'}
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             {!isLogin && (
               <>
                 <div className="space-y-2">
