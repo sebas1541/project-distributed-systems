@@ -138,7 +138,6 @@ services:
   ai-service:
     build:
       context: ./services/ai-service
-      dockerfile: Dockerfile.local
     container_name: smartplanner-ai-service
     environment:
       NODE_ENV: ${NODE_ENV:-development}
