@@ -1,12 +1,10 @@
-# Build stage
-FROM node:20-alpine AS build
+# Multi-stage Dockerfile for AI Service
+# - Builds NestJS application
+# - Compiles Whisper.cpp from source
+# - Downloads Whisper base model
+# - All contained within Docker (no host dependencies)
 
-# Install build dependencies for whisper.cpp
-RUN apk add --no-cache \
-    build-base \
-    cmake \
-    git \
-    bash
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
@@ -16,31 +14,40 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Clone and build whisper.cpp
-RUN git clone https://github.com/ggerganov/whisper.cpp.git && \
-    cd whisper.cpp && \
-    make
-
-# Download whisper model manually (Alpine's BusyBox wget has limited options)
-RUN cd whisper.cpp/models && \
-    wget -q https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin \
-    -O ggml-base.bin && \
-    ls -lh ggml-base.bin
-
 # Copy source code
 COPY . .
 
 # Build the NestJS application
 RUN npm run build
 
+# Whisper.cpp build stage
+FROM node:20-alpine AS whisper-builder
+
+WORKDIR /whisper
+
+# Install build dependencies
+RUN apk add --no-cache git make g++ cmake wget
+
+# Clone and build whisper.cpp
+RUN git clone https://github.com/ggerganov/whisper.cpp.git . && \
+    make
+
+# Download base model
+RUN sh ./models/download-ggml-model.sh base
+
 # Production stage
 FROM node:20-alpine AS production
 
-# Install runtime dependencies for whisper.cpp
-RUN apk add --no-cache \
-    libstdc++
-
 WORKDIR /app
+
+# Install ffmpeg for audio conversion
+RUN apk add --no-cache ffmpeg libstdc++
+
+# Copy whisper.cpp from builder
+COPY --from=whisper-builder /whisper /app/whisper.cpp
+
+# Set library path for whisper and ggml shared libraries
+ENV LD_LIBRARY_PATH=/app/whisper.cpp/build/src:/app/whisper.cpp/build/ggml/src:$LD_LIBRARY_PATH
 
 # Copy package files
 COPY package*.json ./
@@ -51,9 +58,6 @@ RUN npm ci --only=production
 # Copy built application from build stage
 COPY --from=build /app/dist ./dist
 
-# Copy whisper.cpp (built in build stage)
-COPY --from=build /app/whisper.cpp ./whisper.cpp
-
 # Create uploads directory
 RUN mkdir -p /app/uploads && chmod 777 /app/uploads
 
@@ -62,7 +66,7 @@ EXPOSE 3003
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3003/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
+    CMD node -e "require('http').get('http://localhost:3003/api/ai/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
 
 # Start the application
 CMD ["node", "dist/main"]
