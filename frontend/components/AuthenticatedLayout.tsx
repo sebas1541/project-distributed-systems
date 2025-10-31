@@ -6,11 +6,15 @@ import { ProtectedRoute } from '@/features/auth';
 import { VoiceTaskButton } from '@/components/VoiceTaskButton';
 import { VoiceRecordingModal } from '@/components/VoiceRecordingModal';
 
+interface AuthenticatedLayoutProps {
+  children: React.ReactNode;
+  onTaskCreated?: () => void;
+}
+
 export default function AuthenticatedLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+  onTaskCreated,
+}: AuthenticatedLayoutProps) {
   const [isRecordingOpen, setIsRecordingOpen] = useState(false);
 
   const handleRecordingComplete = async (audioBlob: Blob) => {
@@ -27,9 +31,13 @@ export default function AuthenticatedLayout({
       
       console.log('✅ Transcription received:', result.transcription);
       
-      // TODO: Parse transcription with LLM and create task
-      // For now, just show the transcription
-      alert(`Transcripción: ${result.transcription}`);
+      if (result.taskCreated && result.taskData) {
+        console.log('✅ Task created:', result.taskData);
+        // Trigger refresh if callback provided
+        if (onTaskCreated) {
+          onTaskCreated();
+        }
+      }
       
     } catch (error) {
       console.error('Transcription error:', error);
