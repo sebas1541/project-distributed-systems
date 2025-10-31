@@ -75,7 +75,7 @@ export default function TasksPage() {
   };
 
   return (
-    <AuthenticatedLayout>
+    <AuthenticatedLayout onTaskCreated={handleTaskCreated}>
       <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="mb-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Mis Tareas</h2>
