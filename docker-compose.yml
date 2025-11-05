@@ -145,10 +145,10 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       # Whisper.cpp built inside container
       WHISPER_PATH: /app/whisper.cpp/build/bin/whisper-cli
-      WHISPER_MODEL_PATH: /app/whisper.cpp/models/ggml-base.bin
+      WHISPER_MODEL_PATH: /app/whisper.cpp/models/ggml-small.bin
       # Ollama for NLP (runs on host Mac)
       OLLAMA_URL: http://host.docker.internal:11434
-      OLLAMA_MODEL: llama3.2:3b
+      OLLAMA_MODEL: llama3.1:8b
       # RabbitMQ connection
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-smartplanner}:${RABBITMQ_PASSWORD:-rabbitmq_password}@rabbitmq:5672
     volumes:

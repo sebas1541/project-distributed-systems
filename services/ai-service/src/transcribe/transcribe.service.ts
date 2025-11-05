@@ -15,7 +15,7 @@ export class TranscribeService {
   );
   private readonly modelPath = process.env.WHISPER_MODEL_PATH || join(
     __dirname,
-    '../../whisper.cpp/models/ggml-base.bin',
+    '../../whisper.cpp/models/ggml-small.bin',
   );
 
   async transcribe(audioFilePath: string): Promise<string> {
