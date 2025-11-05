@@ -90,6 +90,10 @@ services:
       RABBITMQ_URL: ${RABBITMQ_URL}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-7d}
+      # Google OAuth for authentication
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_AUTH_REDIRECT_URI: "http://localhost/api/auth/google/callback"
     depends_on:
       postgres:
         condition: service_healthy

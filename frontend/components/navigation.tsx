@@ -2,12 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CheckSquare, LayoutDashboard, User, Settings } from 'lucide-react';
+import { CheckSquare, LayoutDashboard, Settings } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Tareas', href: '/tasks', icon: CheckSquare },
-  { name: 'Perfil', href: '/profile', icon: User },
   { name: 'Configuración', href: '/settings', icon: Settings },
 ];
 

@@ -9,8 +9,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Smart Planner AI - Gestión Inteligente de Tareas",
-  description: "Aplicación web distribuida e inteligente para gestionar tareas, recordatorios y eventos mediante lenguaje natural.",
+  title: "Quickie Tasks",
+  description: "Agenda tus tareas con IA",
 };
 
 export default function RootLayout({

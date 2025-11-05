@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/components/AuthenticatedLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, User } from 'lucide-react';
+import { useAuth } from '@/features/auth';
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -77,103 +79,139 @@ export default function SettingsPage() {
 
   return (
     <AuthenticatedLayout>
-      <div className="space-y-6">
+      <div className="max-w-4xl mx-auto space-y-8 py-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Configuración</h1>
-          <p className="mt-2 text-gray-600">
-            Administra las integraciones y preferencias de tu cuenta
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Configuración</h1>
+          <p className="text-lg text-gray-600">
+            Administra tu perfil y las integraciones de tu cuenta
           </p>
         </div>
 
-        {/* Google Calendar Integration Card */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <Calendar className="h-6 w-6 text-blue-600" />
+        {/* Profile Card */}
+        <Card className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <CardContent className="p-8">
+            <div className="space-y-6">
+              {/* Section Header */}
+              <div className="pb-4 border-b border-gray-100">
+                <h2 className="text-2xl font-bold text-gray-900">Perfil</h2>
+                <p className="text-sm text-gray-500 mt-1">Información de tu cuenta</p>
               </div>
-              
-              <div className="flex-1 space-y-4">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    Integración con Google Calendar
-                  </h2>
-                  <p className="mt-1 text-sm text-gray-600">
-                    Sincroniza automáticamente tus tareas con fechas de vencimiento a Google Calendar
-                  </p>
+
+              {/* Profile Information */}
+              <div className="space-y-6">
+                {/* Profile Picture and Name */}
+                <div className="flex items-center gap-6 p-6 bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl">
+                  {user?.picture ? (
+                    <img 
+                      src={user.picture} 
+                      alt={`${user.firstName} ${user.lastName}`}
+                      className="h-20 w-20 rounded-2xl object-cover border-4 border-white shadow-lg ring-2 ring-purple-100"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg ring-2 ring-purple-100">
+                      <User className="h-10 w-10 text-white" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                      {user?.firstName} {user?.lastName}
+                    </h3>
+                    <p className="text-sm text-gray-600 flex items-center gap-2">
+                      <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+                      {user?.email}
+                    </p>
+                  </div>
                 </div>
 
-                {loading ? (
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    <span className="text-sm">Verificando conexión...</span>
+                {/* Account Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-5 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-shadow duration-200">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Nombre</p>
+                    <p className="text-lg font-semibold text-gray-900">{user?.firstName}</p>
                   </div>
-                ) : (
-                  <>
-                    {/* Connection Status */}
-                    <div className="flex items-center gap-2">
-                      {isConnected ? (
-                        <>
-                          <CheckCircle className="h-5 w-5 text-green-600" />
-                          <span className="text-sm font-medium text-green-700">
-                            Conectado a Google Calendar
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="h-5 w-5 text-gray-400" />
-                          <span className="text-sm font-medium text-gray-600">
-                            No conectado
-                          </span>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Info Box */}
-                    {isConnected && (
-                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                        <h3 className="font-semibold text-blue-900 mb-2">¿Cómo funciona?</h3>
-                        <ul className="space-y-1 text-sm text-blue-800">
-                          <li className="flex items-start gap-2">
-                            <span className="text-blue-600 mt-0.5">•</span>
-                            <span>Cuando creas una tarea con fecha, aparece en Google Calendar</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-blue-600 mt-0.5">•</span>
-                            <span>Al actualizar una tarea, el evento del calendario se actualiza automáticamente</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-blue-600 mt-0.5">•</span>
-                            <span>Al eliminar una tarea, el evento se elimina del calendario</span>
-                          </li>
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Action Button */}
-                    <div className="pt-2">
-                      {isConnected ? (
-                        <Button 
-                          onClick={handleDisconnect} 
-                          variant="outline"
-                          className="w-full sm:w-auto"
-                        >
-                          Desconectar Google Calendar
-                        </Button>
-                      ) : (
-                        <Button 
-                          onClick={handleConnect}
-                          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
-                        >
-                          <Calendar className="mr-2 h-4 w-4" />
-                          Conectar con Google Calendar
-                        </Button>
-                      )}
-                    </div>
-                  </>
-                )}
+                  <div className="p-5 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-shadow duration-200">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Apellido</p>
+                    <p className="text-lg font-semibold text-gray-900">{user?.lastName}</p>
+                  </div>
+                  <div className="p-5 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-shadow duration-200 sm:col-span-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Correo Electrónico</p>
+                    <p className="text-lg font-semibold text-gray-900">{user?.email}</p>
+                  </div>
+                </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Google Calendar Integration Card */}
+        <Card className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <CardContent className="p-8">
+            <div className="space-y-6">
+              {/* Section Header */}
+              <div className="pb-4 border-b border-gray-100">
+                <h2 className="text-2xl font-bold text-gray-900">Google Calendar</h2>
+                <p className="text-sm text-gray-500 mt-1">Sincroniza tus tareas automáticamente</p>
+              </div>
+
+              {loading ? (
+                <div className="flex items-center justify-center gap-3 py-8 text-gray-500">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+                  <span className="text-sm font-medium">Verificando conexión...</span>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Connection Status */}
+                  <div className="flex items-center justify-between p-5 bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-xl border border-gray-100">
+                    <div className="flex items-center gap-3">
+                      {isConnected ? (
+                        <>
+                          <div className="p-2 bg-green-100 rounded-lg">
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">Conectado</p>
+                            <p className="text-sm text-gray-600">Sincronización activa</p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="p-2 bg-gray-100 rounded-lg">
+                            <XCircle className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">No conectado</p>
+                            <p className="text-sm text-gray-600">Conecta tu cuenta de Google</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <div className="pt-2">
+                    {isConnected ? (
+                      <Button 
+                        onClick={handleDisconnect} 
+                        variant="outline"
+                        size="lg"
+                        className="w-full sm:w-auto border-2 hover:bg-red-50 hover:border-red-300 hover:text-red-700 transition-all duration-200"
+                      >
+                        Desconectar Google Calendar
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={handleConnect}
+                        size="lg"
+                        className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200"
+                      >
+                        <Calendar className="mr-2 h-5 w-5" />
+                        Conectar con Google Calendar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

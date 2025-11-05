@@ -21,11 +21,11 @@ export function Header() {
             {/* Left: Logo */}
             <div className="flex items-center">
               <Image 
-                src="/logo.png" 
+                src="/logo-white.png" 
                 alt="Smart Planner AI Logo" 
-                width={120} 
-                height={40}
-                className="h-10 w-auto object-contain"
+                width={160} 
+                height={53}
+                className="h-12 w-auto object-contain"
               />
             </div>
 
@@ -38,7 +38,15 @@ export function Header() {
             <div className="flex items-center gap-2 sm:gap-3">
               {user && (
                 <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
-                  <UserIcon className="h-4 w-4 text-gray-600" />
+                  {user.picture ? (
+                    <img 
+                      src={user.picture} 
+                      alt={`${user.firstName} ${user.lastName}`}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <UserIcon className="h-4 w-4 text-gray-600" />
+                  )}
                   <span className="text-sm font-medium text-gray-700">
                     {user.firstName} {user.lastName}
                   </span>
@@ -86,7 +94,15 @@ export function Header() {
               {user && (
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-3">
-                    <UserIcon className="h-4 w-4 text-gray-600" />
+                    {user.picture ? (
+                      <img 
+                        src={user.picture} 
+                        alt={`${user.firstName} ${user.lastName}`}
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <UserIcon className="h-4 w-4 text-gray-600" />
+                    )}
                     <span className="text-sm font-medium text-gray-700">
                       {user.firstName} {user.lastName}
                     </span>
