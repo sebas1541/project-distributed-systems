@@ -164,6 +164,41 @@ services:
       - "traefik.http.routers.ai-service.rule=PathPrefix(`/api/ai`)"
       - "traefik.http.services.ai-service.loadbalancer.server.port=3003"
 
+  # Scheduler Service - Google Calendar Integration
+  scheduler-service:
+    build:
+      context: ./services/scheduler-service
+      dockerfile: Dockerfile
+    container_name: smartplanner-scheduler-service
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 3004
+      # Database connection (shared with task-service)
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${POSTGRES_USER:-smartplanner}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-smartplanner_password}
+      DATABASE_NAME: ${POSTGRES_DB:-smartplanner_db}
+      # Google OAuth credentials
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: "http://localhost/api/scheduler/auth/google/callback"
+      # RabbitMQ connection
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-smartplanner}:${RABBITMQ_PASSWORD:-rabbitmq_password}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smartplanner-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.scheduler-service.rule=PathPrefix(`/api/scheduler`)"
+      - "traefik.http.routers.scheduler-service.middlewares=scheduler-stripprefix"
+      - "traefik.http.middlewares.scheduler-stripprefix.stripprefix.prefixes=/api/scheduler"
+      - "traefik.http.services.scheduler-service.loadbalancer.server.port=3004"
+
 networks:
   smartplanner-network:
     driver: bridge

@@ -6,10 +6,16 @@ import { CreateTaskDto, UpdateTaskDto } from './dto/task.dto';
 
 @Injectable()
 export class TasksService {
+  private rabbitmqPublisher: any; // Lazy-loaded to avoid circular dependency
+
   constructor(
     @InjectRepository(Task)
     private tasksRepository: Repository<Task>,
   ) {}
+
+  setRabbitmqPublisher(publisher: any) {
+    this.rabbitmqPublisher = publisher;
+  }
 
   async create(userId: string, createTaskDto: CreateTaskDto): Promise<Task> {
     const task = this.tasksRepository.create({
@@ -17,7 +23,14 @@ export class TasksService {
       userId,
       dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
     });
-    return this.tasksRepository.save(task);
+    const savedTask = await this.tasksRepository.save(task);
+    
+    // Publish task.created event
+    if (this.rabbitmqPublisher) {
+      await this.rabbitmqPublisher.publishTaskCreated(savedTask);
+    }
+    
+    return savedTask;
   }
 
   async findAll(userId: string): Promise<Task[]> {
@@ -52,12 +65,24 @@ export class TasksService {
       task.dueDate = new Date(updateTaskDto.dueDate);
     }
     
-    return this.tasksRepository.save(task);
+    const updatedTask = await this.tasksRepository.save(task);
+    
+    // Publish task.updated event
+    if (this.rabbitmqPublisher) {
+      await this.rabbitmqPublisher.publishTaskUpdated(updatedTask);
+    }
+    
+    return updatedTask;
   }
 
   async remove(id: string, userId: string): Promise<void> {
     const task = await this.findOne(id, userId);
     await this.tasksRepository.remove(task);
+    
+    // Publish task.deleted event
+    if (this.rabbitmqPublisher) {
+      await this.rabbitmqPublisher.publishTaskDeleted(id, userId);
+    }
   }
 
   async findByStatus(userId: string, status: TaskStatus): Promise<Task[]> {

@@ -7,6 +7,7 @@ Gestor de tareas potenciado con IA, con entrada de voz y procesamiento de lengua
 ## Características
 
 - Voz a Tarea: Habla para crear tareas (Whisper.cpp + Ollama LLM)
+- Sincronización con Google Calendar automática
 - Autenticación JWT
 - Gestión de Tareas: CRUD con prioridades y fechas límite
 - Arquitectura de Microservicios con RabbitMQ
@@ -61,14 +62,16 @@ Abrir http://localhost:3000
 - **Auth** (3001): Autenticación JWT
 - **Task** (3002): CRUD de tareas
 - **AI** (3003): Whisper + Ollama NLP
+- **Scheduler** (3004): Google Calendar sync
 - **Frontend** (3000): Next.js
 
 ### Traefik (API Gateway)
 ```
 localhost:3000 → Traefik (puerto 80)
-  /api/auth/*  → Servicio Auth
-  /api/tasks/* → Servicio Task
-  /api/ai/*    → Servicio AI
+  /api/auth/*      → Servicio Auth
+  /api/tasks/*     → Servicio Task
+  /api/ai/*        → Servicio AI
+  /api/scheduler/* → Servicio Scheduler
 ```
 
 ### Flujo RabbitMQ
@@ -80,11 +83,20 @@ Extraer datos de tarea (título, fecha, prioridad)
 Publicar a cola RabbitMQ "task.create"
   ↓
 Servicio Task consume → Guardar en PostgreSQL
+  ↓
+Publicar eventos: task.created / task.updated / task.deleted
+  ↓
+Servicio Scheduler consume → Sincronizar con Google Calendar
 ```
 
-**Cola**: `task-service-task-create` (durable)  
+**Colas**: 
+- `task-service-task-create` - Crear tareas desde voz
+- `scheduler-service-task-created` - Sincronizar tareas nuevas
+- `scheduler-service-task-updated` - Actualizar eventos
+- `scheduler-service-task-deleted` - Eliminar eventos
+
 **Exchange**: `tasks` (topic)  
-**Routing Key**: `task.create`
+**Routing Keys**: `task.create`, `task.created`, `task.updated`, `task.deleted`
 
 ## Modelos IA
 
