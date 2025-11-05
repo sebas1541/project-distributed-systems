@@ -35,34 +35,76 @@ export class NlpService {
   }
 
   private buildPrompt(transcription: string): string {
-    const today = new Date().toISOString();
+    const now = new Date();
+    const today = now.toISOString();
+    const todayReadable = now.toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'UTC',
+    });
 
-    return `You are a task extraction assistant. Extract task information from the user's speech and return ONLY valid JSON.
+    return `You are a task extraction assistant. You MUST extract task information from user speech and return ONLY valid JSON.
 
-Current date/time: ${today}
+CURRENT DATE AND TIME:
+- ISO Format: ${today}
+- Human Readable: ${todayReadable}
 
-Rules:
-- title: Short task name (max 100 characters)
-- description: Full details from the speech
-- dueDate: ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ) or null if not mentioned
-- priority: "low", "medium", or "high" (default: "medium")
-- Parse relative dates like "tomorrow", "next week", etc.
-- Detect urgency keywords: "urgent", "important", "asap" → high priority
-- If no task intent detected, return null
+STEP-BY-STEP INSTRUCTIONS:
+1. READ the user's input carefully
+2. IDENTIFY the task action (what needs to be done)
+3. EXTRACT the date/time if mentioned:
+   - "tomorrow" = add 1 day to current date
+   - "today" = current date
+   - "next week" = add 7 days
+   - Specific times like "5pm", "3:30pm" = use that time, otherwise use 12:00 noon
+   - If date mentioned without time, use 12:00 noon
+   - If time mentioned without date, use today's date
+4. DETECT priority keywords:
+   - "urgent", "asap", "important", "critical" → "high"
+   - "sometime", "eventually", "when possible" → "low"
+   - Otherwise → "medium"
+5. FORMAT the output as valid JSON
 
-Examples:
+CRITICAL RULES:
+- dueDate MUST be in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)
+- If ANY date or time is mentioned, you MUST calculate and include dueDate
+- If no date/time mentioned at all, use null for dueDate
+- ALWAYS include all fields: title, description, dueDate, priority
+
+EXAMPLES (study these carefully):
+
 Input: "Buy milk tomorrow"
-Output: {"title":"Buy milk","description":"Buy milk tomorrow","dueDate":"2025-10-31T12:00:00.000Z","priority":"medium"}
+Step 1: Task = "Buy milk"
+Step 2: Date = tomorrow = ${new Date(now.getTime() + 86400000).toISOString().split('T')[0]}
+Step 3: Time = not mentioned, use 12:00 noon
+Step 4: Priority = not mentioned, use "medium"
+Output: {"title":"Buy milk","description":"Buy milk tomorrow","dueDate":"${new Date(now.getTime() + 86400000).toISOString().split('T')[0]}T12:00:00.000Z","priority":"medium"}
 
-Input: "Call doctor urgent"
-Output: {"title":"Call doctor","description":"Call doctor urgent","dueDate":null,"priority":"high"}
+Input: "Call doctor at 5pm tomorrow urgent"
+Step 1: Task = "Call doctor"
+Step 2: Date = tomorrow = ${new Date(now.getTime() + 86400000).toISOString().split('T')[0]}
+Step 3: Time = 5pm = 17:00
+Step 4: Priority = "urgent" mentioned = "high"
+Output: {"title":"Call doctor","description":"Call doctor at 5pm tomorrow urgent","dueDate":"${new Date(now.getTime() + 86400000).toISOString().split('T')[0]}T17:00:00.000Z","priority":"high"}
 
 Input: "Finish report by Friday 3pm"
-Output: {"title":"Finish report","description":"Finish report by Friday 3pm","dueDate":"2025-11-01T15:00:00.000Z","priority":"medium"}
+Output: {"title":"Finish report","description":"Finish report by Friday 3pm","dueDate":"2025-11-08T15:00:00.000Z","priority":"medium"}
 
-Now extract from: "${transcription}"
+Input: "Clean room"
+Step 1: Task = "Clean room"
+Step 2: Date = not mentioned
+Step 3: Time = not mentioned
+Step 4: Priority = not mentioned
+Output: {"title":"Clean room","description":"Clean room","dueDate":null,"priority":"medium"}
 
-Return ONLY the JSON object, no extra text.`;
+NOW PROCESS THIS INPUT STEP BY STEP:
+"${transcription}"
+
+Think through each step, then return ONLY the final JSON object with no extra text or explanation.`;
   }
 
   private async callOllama(prompt: string): Promise<string> {
@@ -76,7 +118,7 @@ Return ONLY the JSON object, no extra text.`;
       body: JSON.stringify({
         model: this.model,
         prompt: prompt,
-        temperature: 0.1, // Low temperature for consistent output
+        temperature: 0.3, // Slightly higher for better reasoning
         stream: false,
       }),
     });

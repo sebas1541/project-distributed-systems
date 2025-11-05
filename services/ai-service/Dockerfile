@@ -32,8 +32,8 @@ RUN apk add --no-cache git make g++ cmake wget
 RUN git clone https://github.com/ggerganov/whisper.cpp.git . && \
     make
 
-# Download base model
-RUN sh ./models/download-ggml-model.sh base
+# Download small model (466MB, better accuracy than base)
+RUN sh ./models/download-ggml-model.sh small
 
 # Production stage
 FROM node:20-alpine AS production
