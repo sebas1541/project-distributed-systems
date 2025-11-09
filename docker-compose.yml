@@ -209,6 +209,37 @@ services:
       - "traefik.http.middlewares.scheduler-stripprefix.stripprefix.prefixes=/api/scheduler"
       - "traefik.http.services.scheduler-service.loadbalancer.server.port=3004"
 
+  # Insights Service - Analytics and Notifications
+  insights-service:
+    build:
+      context: ./services/insights-service
+      dockerfile: Dockerfile
+    container_name: smartplanner-insights-service
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 3005
+      # Google Gemini AI for insights
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      # RabbitMQ connection
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-smartplanner}:${RABBITMQ_PASSWORD:-rabbitmq_password}@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - smartplanner-network
+    labels:
+      - "traefik.enable=true"
+      # REST API routes
+      - "traefik.http.routers.insights-api.rule=PathPrefix(`/api/insights`)"
+      - "traefik.http.routers.insights-api.entrypoints=web"
+      - "traefik.http.routers.insights-api.service=insights-service"
+      # WebSocket routes for notifications
+      - "traefik.http.routers.insights-ws.rule=PathPrefix(`/notifications`)"
+      - "traefik.http.routers.insights-ws.entrypoints=web"
+      - "traefik.http.routers.insights-ws.service=insights-service"
+      # Service definition
+      - "traefik.http.services.insights-service.loadbalancer.server.port=3005"
+
 networks:
   smartplanner-network:
     driver: bridge

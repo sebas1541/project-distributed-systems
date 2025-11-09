@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Navigation } from '@/components/navigation';
+import { NotificationBell } from '@/components/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { LogOut, User as UserIcon, Menu, X } from 'lucide-react';
 import { useAuth } from '@/features/auth';
@@ -36,6 +37,8 @@ export function Header() {
 
             {/* Right: User Actions */}
             <div className="flex items-center gap-2 sm:gap-3">
+              {/* Notification Bell */}
+              <NotificationBell />
               {user && (
                 <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
                   {user.picture ? (

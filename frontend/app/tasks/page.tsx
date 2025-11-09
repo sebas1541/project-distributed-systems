@@ -13,6 +13,7 @@ import { TaskItem } from '@/components/TaskItem';
 import { CreateTaskModal } from '@/components/CreateTaskModal';
 import { TaskCalendarView } from '@/components/TaskCalendarView';
 import { TaskDetailsModal } from '@/components/TaskDetailsModal';
+import { InsightsButton } from '@/components/InsightsButton';
 
 type ViewMode = 'list' | 'calendar';
 
@@ -131,6 +132,8 @@ export default function TasksPage() {
             </Button>
           </div>
 
+          <InsightsButton />
+          
           <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Nueva Tarea
