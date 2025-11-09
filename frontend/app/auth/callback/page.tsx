@@ -20,8 +20,8 @@ export default function AuthCallbackPage() {
         localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
         
-        // Redirect to tasks page
-        router.push('/tasks');
+        // Redirect to home page (will show calendar prompt if needed)
+        router.push('/');
       } catch (error) {
         console.error('Error parsing user data:', error);
         router.push('/login?error=invalid_data');
@@ -34,7 +34,7 @@ export default function AuthCallbackPage() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
         <p className="mt-4 text-gray-600">Iniciando sesión...</p>
       </div>
     </div>

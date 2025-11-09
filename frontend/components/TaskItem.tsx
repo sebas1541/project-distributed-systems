@@ -14,7 +14,7 @@ interface TaskItemProps {
 }
 
 const priorityColors = {
-  [TaskPriority.LOW]: 'bg-blue-50 text-blue-600',
+  [TaskPriority.LOW]: 'bg-gray-50 text-gray-600',
   [TaskPriority.MEDIUM]: 'bg-yellow-50 text-yellow-600',
   [TaskPriority.HIGH]: 'bg-orange-50 text-orange-600',
   [TaskPriority.URGENT]: 'bg-red-50 text-red-600',
@@ -94,7 +94,7 @@ export function TaskItem({ task, onTaskUpdated, onTaskClick }: TaskItemProps) {
             {task.status === TaskStatus.COMPLETED ? (
               <CheckCircle className="h-5 w-5 text-green-500" />
             ) : (
-              <Circle className="h-5 w-5 text-gray-400 hover:text-blue-500 transition-colors" />
+              <Circle className="h-5 w-5 text-gray-400 hover:text-yellow-500 transition-colors" />
             )}
           </button>
 
@@ -152,7 +152,7 @@ export function TaskItem({ task, onTaskUpdated, onTaskClick }: TaskItemProps) {
               e.stopPropagation();
               handleCardClick();
             }}
-            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 flex-shrink-0"
+            className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 flex-shrink-0"
           >
             <Eye className="h-4 w-4" />
           </Button>

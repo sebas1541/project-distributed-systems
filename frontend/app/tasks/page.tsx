@@ -141,7 +141,7 @@ export default function TasksPage() {
         {viewMode === 'calendar' ? (
           isLoading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
             </div>
           ) : (
             <TaskCalendarView 
@@ -180,7 +180,7 @@ export default function TasksPage() {
 
             {isLoading ? (
               <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
               </div>
             ) : (
             <>

@@ -8,14 +8,52 @@ import { Button } from "@/components/ui/button";
 import { Activity, CheckCircle, Clock, TrendingUp, ArrowRight } from "lucide-react";
 import { tasksApi } from '@/features/tasks';
 import { Task, TaskStatus } from '@/types/task.types';
+import { GoogleCalendarPrompt } from '@/components/GoogleCalendarPrompt';
 
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
 
   useEffect(() => {
     loadTasks();
+    checkCalendarPrompt();
   }, []);
+
+  const checkCalendarPrompt = async () => {
+    // Check if we've already shown the prompt
+    const promptShown = localStorage.getItem('calendar-prompt-shown');
+    if (promptShown === 'true') {
+      return;
+    }
+
+    // Check if calendar is already connected
+    try {
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const userId = user?.id || '1';
+      
+      const response = await fetch('http://localhost/api/scheduler/auth/google/status', {
+        headers: {
+          'x-user-id': userId,
+        },
+      });
+      const data = await response.json();
+      
+      // Only show prompt if not connected and not shown before
+      if (!data.connected) {
+        // Small delay to let the page load first
+        setTimeout(() => {
+          setShowCalendarPrompt(true);
+        }, 1000);
+      } else {
+        // If already connected, mark prompt as shown
+        localStorage.setItem('calendar-prompt-shown', 'true');
+      }
+    } catch (error) {
+      console.error('Error checking calendar status:', error);
+    }
+  };
 
   const loadTasks = async () => {
     try {
@@ -46,7 +84,7 @@ export default function Home() {
 
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
           </div>
         ) : (
           <>
@@ -58,8 +96,8 @@ export default function Home() {
                       <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Tareas</p>
                       <p className="text-2xl sm:text-3xl font-bold text-gray-900">{tasks.length}</p>
                     </div>
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                      <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-50 rounded-xl flex items-center justify-center">
+                      <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
                     </div>
                   </div>
                 </CardContent>
@@ -158,6 +196,12 @@ export default function Home() {
           </>
         )}
       </main>
+
+      {/* Google Calendar Connection Prompt */}
+      <GoogleCalendarPrompt 
+        open={showCalendarPrompt} 
+        onClose={() => setShowCalendarPrompt(false)} 
+      />
     </AuthenticatedLayout>
   );
 }

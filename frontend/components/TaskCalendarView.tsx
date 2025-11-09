@@ -91,14 +91,14 @@ export function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarViewProps) 
         onClick={() => handleDateClick(date)}
         className={`aspect-square p-1 flex flex-col items-center justify-start transition-colors relative ${
           isSelected 
-            ? 'bg-blue-600 text-white' 
+            ? 'bg-yellow-400 text-black' 
             : isToday 
-            ? 'bg-blue-100' 
+            ? 'bg-yellow-100' 
             : 'hover:bg-gray-100'
         }`}
       >
         <span className={`text-sm sm:text-base font-medium ${
-          isSelected ? 'text-white' : isToday ? 'text-blue-600' : 'text-gray-900'
+          isSelected ? 'text-black font-semibold' : isToday ? 'text-yellow-600' : 'text-gray-900'
         }`}>
           {day}
         </span>
@@ -109,12 +109,12 @@ export function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarViewProps) 
                 key={idx}
                 className={`h-1 w-1 sm:h-1.5 sm:w-1.5 fill-current ${
                   isSelected 
-                    ? 'text-white' 
+                    ? 'text-black' 
                     : task.status === TaskStatus.COMPLETED
                     ? 'text-green-500'
                     : task.status === TaskStatus.IN_PROGRESS
-                    ? 'text-yellow-500'
-                    : 'text-blue-500'
+                    ? 'text-orange-500'
+                    : 'text-yellow-500'
                 }`}
               />
             ))}
@@ -141,7 +141,7 @@ export function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarViewProps) 
                 variant="ghost" 
                 size="sm" 
                 onClick={goToToday}
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-xs sm:text-sm px-2 sm:px-3"
+                className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 text-xs sm:text-sm px-2 sm:px-3"
               >
                 Hoy
               </Button>
@@ -203,10 +203,10 @@ export function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarViewProps) 
                 <div
                   key={day.key}
                   className={`min-h-[120px] border-r border-b border-gray-200 p-2 overflow-hidden hover:bg-gray-50 transition-colors ${
-                    isToday ? 'bg-blue-50' : 'bg-white'
+                    isToday ? 'bg-yellow-50' : 'bg-white'
                   }`}
                 >
-                  <div className={`text-sm font-semibold mb-2 ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>
+                  <div className={`text-sm font-semibold mb-2 ${isToday ? 'text-yellow-600' : 'text-gray-700'}`}>
                     {dayNum}
                     {isToday && <span className="ml-1 text-xs">(Hoy)</span>}
                   </div>
@@ -219,8 +219,8 @@ export function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarViewProps) 
                           task.status === TaskStatus.COMPLETED
                             ? 'bg-green-100 text-green-800 hover:bg-green-200'
                             : task.status === TaskStatus.IN_PROGRESS
-                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                            : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                            ? 'bg-orange-100 text-orange-800 hover:bg-orange-200'
+                            : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                         }`}
                       >
                         {task.title}
@@ -244,11 +244,11 @@ export function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarViewProps) 
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-4 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-100 rounded"></div>
+              <div className="w-4 h-4 bg-yellow-100 rounded"></div>
               <span className="text-gray-600">Pendiente</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-yellow-100 rounded"></div>
+              <div className="w-4 h-4 bg-orange-100 rounded"></div>
               <span className="text-gray-600">En Progreso</span>
             </div>
             <div className="flex items-center gap-2">
@@ -280,8 +280,8 @@ export function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarViewProps) 
                     task.status === TaskStatus.COMPLETED
                       ? 'bg-green-50 border border-green-200'
                       : task.status === TaskStatus.IN_PROGRESS
-                      ? 'bg-yellow-50 border border-yellow-200'
-                      : 'bg-blue-50 border border-blue-200'
+                      ? 'bg-orange-50 border border-orange-200'
+                      : 'bg-yellow-50 border border-yellow-200'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -290,8 +290,8 @@ export function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarViewProps) 
                         task.status === TaskStatus.COMPLETED
                           ? 'text-green-900 line-through'
                           : task.status === TaskStatus.IN_PROGRESS
-                          ? 'text-yellow-900'
-                          : 'text-blue-900'
+                          ? 'text-orange-900'
+                          : 'text-yellow-900'
                       }`}>
                         {task.title}
                       </h5>
@@ -300,8 +300,8 @@ export function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarViewProps) 
                           task.status === TaskStatus.COMPLETED
                             ? 'text-green-700'
                             : task.status === TaskStatus.IN_PROGRESS
-                            ? 'text-yellow-700'
-                            : 'text-blue-700'
+                            ? 'text-orange-700'
+                            : 'text-yellow-700'
                         }`}>
                           {task.description}
                         </p>
@@ -311,8 +311,8 @@ export function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarViewProps) 
                           task.status === TaskStatus.COMPLETED
                             ? 'text-green-600'
                             : task.status === TaskStatus.IN_PROGRESS
-                            ? 'text-yellow-600'
-                            : 'text-blue-600'
+                            ? 'text-orange-600'
+                            : 'text-yellow-600'
                         }`}>
                           {new Date(task.dueDate).toLocaleTimeString('es-ES', {
                             hour: '2-digit',
@@ -325,8 +325,8 @@ export function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarViewProps) 
                       task.status === TaskStatus.COMPLETED
                         ? 'text-green-500'
                         : task.status === TaskStatus.IN_PROGRESS
-                        ? 'text-yellow-500'
-                        : 'text-blue-500'
+                        ? 'text-orange-500'
+                        : 'text-yellow-500'
                     }`} />
                   </div>
                 </button>

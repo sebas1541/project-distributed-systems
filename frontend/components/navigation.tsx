@@ -28,7 +28,7 @@ export function Navigation() {
               transition-all duration-200 backdrop-blur-sm
               ${
                 isActive
-                  ? 'bg-blue-50 text-blue-700 shadow-sm'
+                  ? 'bg-yellow-400 text-black shadow-sm font-semibold'
                   : 'text-gray-600 hover:bg-gray-50/80 hover:text-gray-900'
               }
             `}

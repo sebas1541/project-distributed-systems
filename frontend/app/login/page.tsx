@@ -213,7 +213,7 @@ export default function LoginPage() {
               {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
               <button
                 onClick={toggleMode}
-                className="text-blue-600 hover:underline font-medium"
+                className="text-yellow-600 hover:underline font-medium"
                 disabled={isSubmitting}
               >
                 {isLogin ? 'Regístrate' : 'Inicia sesión'}

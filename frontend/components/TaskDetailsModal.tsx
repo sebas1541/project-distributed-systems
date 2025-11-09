@@ -194,9 +194,9 @@ export function TaskDetailsModal({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl pr-8">
               {isEditing ? (
-                <Edit2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                <Edit2 className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
               ) : (
-                <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
               )}
               {isEditing ? 'Editar Tarea' : 'Detalles de la Tarea'}
             </DialogTitle>
@@ -232,7 +232,7 @@ export function TaskDetailsModal({
                       <span
                         className={`inline-block px-3 py-1 rounded-lg text-sm font-medium ${
                           task.priority === TaskPriority.LOW
-                            ? 'bg-blue-50 text-blue-600'
+                            ? 'bg-gray-50 text-gray-600'
                             : task.priority === TaskPriority.MEDIUM
                             ? 'bg-yellow-50 text-yellow-600'
                             : task.priority === TaskPriority.HIGH

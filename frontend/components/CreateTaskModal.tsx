@@ -74,7 +74,7 @@ export function CreateTaskModal({
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+            <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
             Nueva Tarea
           </DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">

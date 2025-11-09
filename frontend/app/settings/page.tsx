@@ -21,6 +21,8 @@ export default function SettingsPage() {
     
     if (calendarStatus === 'connected') {
       setIsConnected(true);
+      // Mark that prompt has been shown/handled
+      localStorage.setItem('calendar-prompt-shown', 'true');
       // Clean up URL
       window.history.replaceState({}, '', '/settings');
     } else if (calendarStatus === 'error') {
@@ -156,7 +158,7 @@ export default function SettingsPage() {
 
               {loading ? (
                 <div className="flex items-center justify-center gap-3 py-8 text-gray-500">
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-yellow-600 border-t-transparent"></div>
                   <span className="text-sm font-medium">Verificando conexión...</span>
                 </div>
               ) : (
@@ -203,7 +205,7 @@ export default function SettingsPage() {
                       <Button 
                         onClick={handleConnect}
                         size="lg"
-                        className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200"
+                        className="w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black font-semibold shadow-md hover:shadow-lg transition-all duration-200"
                       >
                         <Calendar className="mr-2 h-5 w-5" />
                         Conectar con Google Calendar
