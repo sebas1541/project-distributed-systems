@@ -90,12 +90,19 @@ export function TaskDetailsModal({
     setIsSubmitting(true);
 
     try {
+      // Convert datetime-local value back to UTC ISO string
+      let dueDateUTC = undefined;
+      if (dueDate) {
+        const localDate = new Date(dueDate);
+        dueDateUTC = localDate.toISOString();
+      }
+
       await tasksApi.updateTask(task.id, {
         title: title.trim(),
         description: description.trim() || undefined,
         priority,
         status,
-        dueDate: dueDate || undefined,
+        dueDate: dueDateUTC,
       });
 
       setIsEditing(false);
