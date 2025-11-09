@@ -94,6 +94,9 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_AUTH_REDIRECT_URI: "http://localhost/api/auth/google/callback"
+      # Frontend URL for OAuth redirects
+      FRONTEND_URL: ${FRONTEND_URL}
+      FRONTEND_TEST_URL: ${FRONTEND_TEST_URL:-http://localhost:3000}
     depends_on:
       postgres:
         condition: service_healthy
@@ -150,9 +153,9 @@ services:
       # Whisper.cpp built inside container
       WHISPER_PATH: /app/whisper.cpp/build/bin/whisper-cli
       WHISPER_MODEL_PATH: /app/whisper.cpp/models/ggml-small.bin
-      # Ollama for NLP (runs on host Mac)
-      OLLAMA_URL: http://host.docker.internal:11434
-      OLLAMA_MODEL: llama3.1:8b
+      # Google Gemini AI for NLP
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
       # RabbitMQ connection
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-smartplanner}:${RABBITMQ_PASSWORD:-rabbitmq_password}@rabbitmq:5672
     volumes:
@@ -187,6 +190,9 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_REDIRECT_URI: "http://localhost/api/scheduler/auth/google/callback"
+      # Frontend URL for OAuth redirects
+      FRONTEND_URL: ${FRONTEND_URL}
+      FRONTEND_TEST_URL: ${FRONTEND_TEST_URL:-http://localhost:3000}
       # RabbitMQ connection
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-smartplanner}:${RABBITMQ_PASSWORD:-rabbitmq_password}@rabbitmq:5672
     depends_on:

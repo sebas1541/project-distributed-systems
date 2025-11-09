@@ -30,10 +30,12 @@ export class AuthController {
       await this.calendarService.handleCallback(code, userId);
       
       // Redirect to frontend success page
-      res.redirect('http://localhost:3000/settings?calendar=connected');
+      const frontendUrl = process.env.FRONTEND_URL || process.env.FRONTEND_TEST_URL;
+      res.redirect(`${frontendUrl}/settings?calendar=connected`);
     } catch (error) {
       console.error('OAuth callback error:', error);
-      res.redirect('http://localhost:3000/settings?calendar=error');
+      const frontendUrl = process.env.FRONTEND_URL || process.env.FRONTEND_TEST_URL;
+      res.redirect(`${frontendUrl}/settings?calendar=error`);
     }
   }
 

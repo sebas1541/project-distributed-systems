@@ -28,10 +28,12 @@ export class AuthController {
   async googleAuthCallback(@Query('code') code: string, @Res() res: Response) {
     try {
       const result = await this.authService.googleLogin(code);
+      const frontendUrl = process.env.FRONTEND_URL || process.env.FRONTEND_TEST_URL;
       // Redirect to frontend with token
-      res.redirect(`http://localhost:3000/auth/callback?token=${result.access_token}&user=${encodeURIComponent(JSON.stringify(result.user))}`);
+      res.redirect(`${frontendUrl}/auth/callback?token=${result.access_token}&user=${encodeURIComponent(JSON.stringify(result.user))}`);
     } catch (error) {
-      res.redirect('http://localhost:3000/login?error=google_auth_failed');
+      const frontendUrl = process.env.FRONTEND_URL || process.env.FRONTEND_TEST_URL;
+      res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
     }
   }
 

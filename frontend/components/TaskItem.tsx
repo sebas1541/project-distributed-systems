@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Circle, Clock, Trash2 } from 'lucide-react';
+import { CheckCircle, Circle, Clock, Eye } from 'lucide-react';
 import { Task, TaskStatus, TaskPriority } from '@/types/task.types';
 import { tasksApi } from '@/features/tasks';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 interface TaskItemProps {
   task: Task;
   onTaskUpdated: () => void;
+  onTaskClick?: (task: Task) => void;
 }
 
 const priorityColors = {
@@ -34,12 +34,11 @@ const statusColors = {
   [TaskStatus.CANCELLED]: 'bg-red-50 text-red-600',
 };
 
-export function TaskItem({ task, onTaskUpdated }: TaskItemProps) {
+export function TaskItem({ task, onTaskUpdated, onTaskClick }: TaskItemProps) {
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const toggleTaskStatus = async () => {
+  const toggleTaskStatus = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsUpdating(true);
     try {
       const newStatus =
@@ -58,20 +57,9 @@ export function TaskItem({ task, onTaskUpdated }: TaskItemProps) {
     }
   };
 
-  const handleDeleteClick = () => {
-    setShowDeleteDialog(true);
-  };
-
-  const confirmDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await tasksApi.deleteTask(task.id);
-      setShowDeleteDialog(false);
-      onTaskUpdated();
-    } catch (error) {
-      console.error('Error deleting task:', error);
-      setIsDeleting(false);
-      setShowDeleteDialog(false);
+  const handleCardClick = () => {
+    if (onTaskClick) {
+      onTaskClick(task);
     }
   };
 
@@ -92,12 +80,15 @@ export function TaskItem({ task, onTaskUpdated }: TaskItemProps) {
   };
 
   return (
-    <Card className={isDeleting ? 'opacity-50' : ''}>
+    <Card 
+      className="cursor-pointer hover:shadow-md transition-shadow"
+      onClick={handleCardClick}
+    >
       <CardContent className="p-4 sm:p-6">
         <div className="flex items-start gap-3 sm:gap-4">
           <button
             onClick={toggleTaskStatus}
-            disabled={isUpdating || isDeleting}
+            disabled={isUpdating}
             className="mt-1 disabled:opacity-50 flex-shrink-0"
           >
             {task.status === TaskStatus.COMPLETED ? (
@@ -117,7 +108,9 @@ export function TaskItem({ task, onTaskUpdated }: TaskItemProps) {
             </h3>
 
             {task.description && (
-              <p className="text-sm text-gray-600 mb-3 break-words">{task.description}</p>
+              <p className="text-sm text-gray-600 mb-3 break-words line-clamp-2">
+                {task.description}
+              </p>
             )}
 
             <div className="flex items-center gap-2 sm:gap-3 text-xs flex-wrap">
@@ -155,26 +148,16 @@ export function TaskItem({ task, onTaskUpdated }: TaskItemProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleDeleteClick}
-            disabled={isDeleting}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCardClick();
+            }}
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 flex-shrink-0"
           >
-            <Trash2 className="h-4 w-4" />
+            <Eye className="h-4 w-4" />
           </Button>
         </div>
       </CardContent>
-
-      <ConfirmDialog
-        open={showDeleteDialog}
-        onOpenChange={setShowDeleteDialog}
-        onConfirm={confirmDelete}
-        title="Eliminar Tarea"
-        description={`¿Estás seguro de que deseas eliminar la tarea "${task.title}"? Esta acción no se puede deshacer.`}
-        confirmText="Sí, Eliminar"
-        cancelText="Cancelar"
-        variant="destructive"
-        isLoading={isDeleting}
-      />
     </Card>
   );
 }

@@ -10,9 +10,8 @@ export interface TaskData {
 @Injectable()
 export class NlpService {
   private readonly logger = new Logger(NlpService.name);
-  private readonly ollamaUrl =
-    process.env.OLLAMA_URL || 'http://host.docker.internal:11434';
-  private readonly model = process.env.OLLAMA_MODEL || 'llama3.2:3b';
+  private readonly geminiApiKey = process.env.GEMINI_API_KEY;
+  private readonly geminiModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
   async extractTaskFromTranscription(
     transcription: string,
@@ -23,7 +22,7 @@ export class NlpService {
 
     try {
       const prompt = this.buildPrompt(transcription);
-      const response = await this.callOllama(prompt);
+      const response = await this.callGemini(prompt);
       const taskData = this.parseResponse(response);
 
       this.logger.log(`Extracted task data: ${JSON.stringify(taskData)}`);
@@ -37,6 +36,9 @@ export class NlpService {
   private buildPrompt(transcription: string): string {
     const now = new Date();
     const today = now.toISOString();
+    
+    // Colombia timezone (UTC-5)
+    const colombiaTime = new Date(now.getTime() - (5 * 60 * 60 * 1000));
     const todayReadable = now.toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -44,24 +46,50 @@ export class NlpService {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      timeZone: 'UTC',
+      timeZone: 'America/Bogota',
     });
 
     return `You are a task extraction assistant. You MUST extract task information from user speech and return ONLY valid JSON.
 
+IMPORTANT: This text comes from voice-to-text transcription (Whisper small model), so it may contain:
+- Typos and spelling errors
+- Homophones (words that sound alike but are spelled differently)
+- Missing punctuation
+- Informal speech patterns
+- Run-on sentences
+
+Your job is to:
+1. CORRECT any obvious typos or transcription errors
+2. INTERPRET what the user likely meant to say
+3. EXTRACT the core task information accurately
+
+USER TIMEZONE: America/Bogota (UTC-5 / Colombia Time)
+CRITICAL: When the user says a time like "3pm", they mean 3pm Colombia time (UTC-5).
+You MUST convert this to UTC by ADDING 5 hours.
+Example: User says "3pm" → They mean 3pm Colombia → Store as 20:00 UTC (3pm + 5 hours)
+Example: User says "10am" → They mean 10am Colombia → Store as 15:00 UTC (10am + 5 hours)
+
 CURRENT DATE AND TIME:
-- ISO Format: ${today}
-- Human Readable: ${todayReadable}
+- ISO Format (UTC): ${today}
+- Human Readable (Colombia Time): ${todayReadable}
 
 STEP-BY-STEP INSTRUCTIONS:
-1. READ the user's input carefully
+1. READ the user's input carefully and FIX any obvious errors
 2. IDENTIFY the task action (what needs to be done)
 3. EXTRACT the date/time if mentioned:
    - "tomorrow" = add 1 day to current date
-   - "today" = current date
+   - "today" = current date  
    - "next week" = add 7 days
-   - Specific times like "5pm", "3:30pm" = use that time, otherwise use 12:00 noon
-   - If date mentioned without time, use 12:00 noon
+   - TIME EXTRACTION (CRITICAL):
+     * Look for times like: "3pm", "3 pm", "3 p.m.", "15:00", "three pm", "at 5", "by 3", etc.
+     * "3pm" or "3 p.m." or "by 3 p.m." = 15:00 (3:00 PM in 24-hour format)
+     * "5pm" or "5 p.m." = 17:00 (5:00 PM in 24-hour format)
+     * "10am" or "10 a.m." = 10:00 (10:00 AM in 24-hour format)
+     * "3:30pm" = 15:30
+     * Always convert PM times: add 12 to hour (1pm=13:00, 2pm=14:00, 3pm=15:00, etc.)
+     * Keep AM times as is (9am=09:00, 10am=10:00, 11am=11:00)
+     * If time mentioned without AM/PM and it's 1-12, assume PM for afternoon context
+   - If date mentioned without time, use 12:00 (noon)
    - If time mentioned without date, use today's date
 4. DETECT priority keywords:
    - "urgent", "asap", "important", "critical" → "high"
@@ -87,11 +115,29 @@ Output: {"title":"Buy milk","description":"Buy milk tomorrow","dueDate":"${new D
 Input: "Call doctor at 5pm tomorrow urgent"
 Step 1: Task = "Call doctor"
 Step 2: Date = tomorrow = ${new Date(now.getTime() + 86400000).toISOString().split('T')[0]}
-Step 3: Time = 5pm = 17:00
+Step 3: Time = "5pm" = 17:00 (5 + 12 = 17 in 24-hour format)
 Step 4: Priority = "urgent" mentioned = "high"
 Output: {"title":"Call doctor","description":"Call doctor at 5pm tomorrow urgent","dueDate":"${new Date(now.getTime() + 86400000).toISOString().split('T')[0]}T17:00:00.000Z","priority":"high"}
 
+Input: "Go shopping tomorrow by 3 p.m."
+Step 1: Task = "Go shopping"
+Step 2: Date = tomorrow = ${new Date(now.getTime() + 86400000).toISOString().split('T')[0]}
+Step 3: Time = "3 p.m." Colombia time = 15:00 Colombia = 20:00 UTC (15 + 5 = 20)
+Step 4: Priority = not mentioned = "medium"
+Output: {"title":"Go shopping","description":"Go shopping tomorrow by 3 p.m.","dueDate":"${new Date(now.getTime() + 86400000).toISOString().split('T')[0]}T20:00:00.000Z","priority":"medium"}
+
+Input: "Meeting at 10am today"
+Step 1: Task = "Meeting"
+Step 2: Date = today = ${today.split('T')[0]}
+Step 3: Time = "10am" Colombia time = 10:00 Colombia = 15:00 UTC (10 + 5 = 15)
+Step 4: Priority = not mentioned = "medium"
+Output: {"title":"Meeting","description":"Meeting at 10am today","dueDate":"${today.split('T')[0]}T15:00:00.000Z","priority":"medium"}
+
 Input: "Finish report by Friday 3pm"
+Step 1: Task = "Finish report"
+Step 2: Date = Friday = 2025-11-08
+Step 3: Time = "3pm" = 15:00 (3 + 12 = 15)
+Step 4: Priority = not mentioned = "medium"
 Output: {"title":"Finish report","description":"Finish report by Friday 3pm","dueDate":"2025-11-08T15:00:00.000Z","priority":"medium"}
 
 Input: "Clean room"
@@ -101,36 +147,80 @@ Step 3: Time = not mentioned
 Step 4: Priority = not mentioned
 Output: {"title":"Clean room","description":"Clean room","dueDate":null,"priority":"medium"}
 
+TRANSCRIPTION ERROR EXAMPLES (with corrections):
+
+Input: "by melk tommorow" (transcription error)
+Corrected: "buy milk tomorrow"
+Output: {"title":"Buy milk","description":"Buy milk tomorrow","dueDate":"${new Date(now.getTime() + 86400000).toISOString().split('T')[0]}T12:00:00.000Z","priority":"medium"}
+
+Input: "call docter five pm tuday urgent" (multiple errors)
+Corrected: "call doctor 5pm today urgent"
+Output: {"title":"Call doctor","description":"Call doctor at 5pm today urgent","dueDate":"${today.split('T')[0]}T17:00:00.000Z","priority":"high"}
+
+Input: "finnish the reprt by friday tree pm" (errors)
+Corrected: "finish the report by friday 3pm"
+Output: {"title":"Finish the report","description":"Finish the report by Friday 3pm","dueDate":"2025-11-08T15:00:00.000Z","priority":"medium"}
+
+Input: "meat with john next weak" (homophones)
+Corrected: "meet with john next week"
+Output: {"title":"Meet with John","description":"Meet with John next week","dueDate":"${new Date(now.getTime() + 7 * 86400000).toISOString().split('T')[0]}T12:00:00.000Z","priority":"medium"}
+
 NOW PROCESS THIS INPUT STEP BY STEP:
 "${transcription}"
 
-Think through each step, then return ONLY the final JSON object with no extra text or explanation.`;
+First, silently correct any obvious transcription errors or typos.
+Then think through each step.
+Finally, return ONLY the final JSON object with no extra text or explanation.`;
   }
 
-  private async callOllama(prompt: string): Promise<string> {
-    this.logger.log(`Calling Ollama at ${this.ollamaUrl}`);
+  private async callGemini(prompt: string): Promise<string> {
+    if (!this.geminiApiKey) {
+      throw new Error('GEMINI_API_KEY environment variable is not set');
+    }
 
-    const response = await fetch(`${this.ollamaUrl}/api/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    this.logger.log(`Calling Google Gemini API`);
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${this.geminiModel}:generateContent?key=${this.geminiApiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          },
+        }),
       },
-      body: JSON.stringify({
-        model: this.model,
-        prompt: prompt,
-        temperature: 0.3, // Slightly higher for better reasoning
-        stream: false,
-      }),
-    });
+    );
 
     if (!response.ok) {
+      const errorText = await response.text();
       throw new Error(
-        `Ollama API error: ${response.status} ${response.statusText}`,
+        `Gemini API error: ${response.status} ${response.statusText} - ${errorText}`,
       );
     }
 
     const data = await response.json();
-    return data.response;
+    
+    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+      throw new Error('Invalid response from Gemini API');
+    }
+
+    return data.candidates[0].content.parts[0].text;
   }
 
   private parseResponse(response: string): TaskData | null {
