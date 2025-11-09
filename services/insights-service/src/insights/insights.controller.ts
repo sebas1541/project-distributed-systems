@@ -1,7 +1,8 @@
-import { Controller, Get, Param, Logger } from '@nestjs/common';
+import { Controller, Get, Param, Logger, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { InsightsService } from './insights.service';
 
-@Controller('insights')
+@Controller()
 export class InsightsController {
   private readonly logger = new Logger(InsightsController.name);
 
@@ -55,6 +56,23 @@ export class InsightsController {
         success: false,
         error: 'Failed to get upcoming tasks',
       };
+    }
+  }
+
+  @Get('stream/:userId')
+  async streamInsights(@Param('userId') userId: string, @Res() res: Response) {
+    try {
+      // Set headers for SSE (Server-Sent Events)
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+
+      await this.insightsService.streamInsights(userId, res);
+    } catch (error) {
+      this.logger.error('Error streaming insights:', error);
+      res.write(`data: ${JSON.stringify({ error: 'Failed to stream insights' })}\n\n`);
+      res.end();
     }
   }
 }

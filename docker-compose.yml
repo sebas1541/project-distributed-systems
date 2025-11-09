@@ -232,13 +232,15 @@ services:
       # REST API routes
       - "traefik.http.routers.insights-api.rule=PathPrefix(`/api/insights`)"
       - "traefik.http.routers.insights-api.entrypoints=web"
-      - "traefik.http.routers.insights-api.service=insights-service"
+      - "traefik.http.routers.insights-api.middlewares=insights-stripprefix"
+      - "traefik.http.middlewares.insights-stripprefix.stripprefix.prefixes=/api/insights"
+      - "traefik.http.routers.insights-api.service=insights-api-service"
+      - "traefik.http.services.insights-api-service.loadbalancer.server.port=3005"
       # WebSocket routes for notifications
       - "traefik.http.routers.insights-ws.rule=PathPrefix(`/notifications`)"
       - "traefik.http.routers.insights-ws.entrypoints=web"
-      - "traefik.http.routers.insights-ws.service=insights-service"
-      # Service definition
-      - "traefik.http.services.insights-service.loadbalancer.server.port=3005"
+      - "traefik.http.routers.insights-ws.service=insights-ws-service"
+      - "traefik.http.services.insights-ws-service.loadbalancer.server.port=3005"
 
 networks:
   smartplanner-network:

@@ -28,7 +28,7 @@ export class InsightsService {
         };
       }
 
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       
       const prompt = `Analiza las siguientes tareas del usuario y proporciona insights útiles en español:
 
@@ -120,6 +120,116 @@ Sé específico, útil y positivo en tus observaciones.`;
     } catch (error) {
       this.logger.error('Error getting upcoming tasks:', error);
       throw error;
+    }
+  }
+
+  async streamInsights(userId: string, res: any): Promise<void> {
+    try {
+      const tasks = this.rabbitMQService.getTasksByUser(userId);
+      const now = new Date();
+      const currentDate = now.toLocaleDateString('es-CO', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const currentTime = now.toLocaleTimeString('es-CO', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      
+      if (tasks.length === 0) {
+        res.write(`data: ${JSON.stringify({ 
+          content: 'No tienes tareas registradas aún. ¡Comienza agregando tus primeras tareas para recibir insights personalizados! 📝',
+          done: true 
+        })}\n\n`);
+        res.end();
+        return;
+      }
+
+      // Calculate analytics
+      const overdueTasks = tasks.filter(t => {
+        if (!t.dueDate || t.status === 'COMPLETED') return false;
+        return new Date(t.dueDate) < now;
+      });
+      
+      const upcomingTasks = tasks.filter(t => {
+        if (!t.dueDate || t.status === 'COMPLETED') return false;
+        const dueDate = new Date(t.dueDate);
+        const hoursUntil = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+        return hoursUntil > 0 && hoursUntil <= 24;
+      });
+
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      
+      const prompt = `Eres un asistente personal de productividad inteligente. Analiza las tareas del usuario y proporciona insights útiles y personalizados.
+
+CONTEXTO ACTUAL:
+📅 Fecha: ${currentDate}
+🕐 Hora: ${currentTime}
+
+TAREAS DEL USUARIO (${tasks.length} total):
+${tasks.map(t => {
+  const status = t.status === 'COMPLETED' ? '✅' : t.status === 'IN_PROGRESS' ? '🔄' : '⏳';
+  const priority = t.priority === 'HIGH' ? '🔴' : t.priority === 'MEDIUM' ? '🟡' : '🟢';
+  let dueInfo = '';
+  if (t.dueDate) {
+    const dueDate = new Date(t.dueDate);
+    const hoursUntil = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    if (hoursUntil < 0) {
+      dueInfo = ` - ⚠️ VENCIDA hace ${Math.abs(Math.round(hoursUntil))}h`;
+    } else if (hoursUntil <= 24) {
+      dueInfo = ` - ⏰ Vence en ${Math.round(hoursUntil)}h`;
+    } else {
+      dueInfo = ` - Vence: ${dueDate.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })}`;
+    }
+  }
+  return `${status} ${priority} ${t.title}${dueInfo}`;
+}).join('\n')}
+
+ESTADÍSTICAS:
+- Tareas vencidas: ${overdueTasks.length}
+- Tareas próximas (24h): ${upcomingTasks.length}
+- Completadas: ${tasks.filter(t => t.status === 'COMPLETED').length}
+- En progreso: ${tasks.filter(t => t.status === 'IN_PROGRESS').length}
+- Pendientes: ${tasks.filter(t => t.status === 'PENDING').length}
+
+INSTRUCCIONES:
+1. **SÉ BREVE Y CONCISO** - Máximo 150 palabras en total
+2. Saluda rápidamente mencionando la hora
+3. Si hay tareas vencidas/urgentes, menciónalas por nombre (máximo 2-3)
+4. Da solo 2-3 recomendaciones concretas y priorizadas
+5. Usa emojis para hacer el mensaje más visual
+6. Escribe en párrafos cortos y directos
+7. NO escribas textos largos o detallados
+
+Formato ideal:
+- Saludo breve (1 línea)
+- Estado actual (2-3 líneas)
+- Top 2-3 recomendaciones (bullets)
+- Motivación final (1 línea)
+
+Escribe en español, directo al punto, como un asistente personal eficiente.`;
+
+      const result = await model.generateContentStream(prompt);
+      
+      // Stream the response token by token
+      for await (const chunk of result.stream) {
+        const text = chunk.text();
+        res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
+      }
+      
+      // Send done signal
+      res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+      res.end();
+      
+    } catch (error) {
+      this.logger.error('Error streaming insights:', error);
+      res.write(`data: ${JSON.stringify({ 
+        error: 'Error al generar insights',
+        done: true 
+      })}\n\n`);
+      res.end();
     }
   }
 }

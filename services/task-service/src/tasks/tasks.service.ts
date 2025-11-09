@@ -102,4 +102,28 @@ export class TasksService {
       .orderBy('task.dueDate', 'ASC')
       .getMany();
   }
+
+  async republishAllTasks(): Promise<{ message: string; count: number }> {
+    // Get all tasks that are not completed
+    const tasks = await this.tasksRepository.find({
+      where: [
+        { status: TaskStatus.PENDING },
+        { status: TaskStatus.IN_PROGRESS },
+      ],
+    });
+
+    // Publish each task as task.created event
+    let publishedCount = 0;
+    if (this.rabbitmqPublisher) {
+      for (const task of tasks) {
+        await this.rabbitmqPublisher.publishTaskCreated(task);
+        publishedCount++;
+      }
+    }
+
+    return {
+      message: 'All active tasks republished successfully',
+      count: publishedCount,
+    };
+  }
 }

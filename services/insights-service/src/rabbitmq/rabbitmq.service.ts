@@ -28,6 +28,27 @@ export class RabbitMQService implements OnModuleInit {
 
   async onModuleInit() {
     await this.connect();
+    // Request task-service to republish all tasks after connecting
+    setTimeout(() => this.requestTasksRepublish(), 3000);
+  }
+
+  private async requestTasksRepublish() {
+    try {
+      const taskServiceUrl = process.env.TASK_SERVICE_URL || 'http://task-service:3002';
+      const response = await fetch(`${taskServiceUrl}/api/tasks/republish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        this.logger.log(`📥 Received ${result.count} existing tasks from task-service`);
+      } else {
+        this.logger.warn('Failed to request tasks republish from task-service');
+      }
+    } catch (error) {
+      this.logger.warn('Could not connect to task-service for republish:', error.message);
+    }
   }
 
   private async connect() {
