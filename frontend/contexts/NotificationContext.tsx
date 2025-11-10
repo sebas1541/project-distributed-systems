@@ -23,6 +23,7 @@ interface NotificationContextType {
   unreadCount: number;
   notifications: Notification[];
   markAsRead: () => void;
+  clearNotifications: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -31,7 +32,27 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>(() => {
+    // Load notifications from localStorage on mount
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('notifications');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          return [];
+        }
+      }
+    }
+    return [];
+  });
+
+  // Persist notifications to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('notifications', JSON.stringify(notifications));
+    }
+  }, [notifications]);
 
   useEffect(() => {
     // Get user from localStorage
@@ -41,8 +62,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const user = JSON.parse(userStr);
     const userId = user.id;
 
-    // Connect to WebSocket server
-    const socketUrl = process.env.NEXT_PUBLIC_INSIGHTS_WS_URL || 'http://localhost:3005';
+    // Connect to WebSocket server through Traefik
+    // In development, connect to Traefik on localhost:80
+    // In production, use the same origin or env variable
+    const socketUrl = process.env.NEXT_PUBLIC_INSIGHTS_WS_URL || 'http://localhost';
+    console.log('🔌 Connecting to WebSocket at:', socketUrl);
+    console.log('📍 Path:', '/notifications/socket.io');
+    
     const newSocket = io(socketUrl, {
       path: '/notifications/socket.io',
       transports: ['websocket', 'polling'],
@@ -53,6 +79,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     newSocket.on('connect', () => {
       console.log('✅ Connected to notifications server');
+      console.log('🆔 Socket ID:', newSocket.id);
+      console.log('👤 Registering user:', userId);
       setIsConnected(true);
       
       // Register user with socket
@@ -63,26 +91,37 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       console.log('✅ Registered for notifications:', data);
     });
 
-    newSocket.on('disconnect', () => {
+    newSocket.on('connect_error', (error) => {
+      console.error('❌ Connection error:', error.message);
+      console.error('🔍 Error details:', error);
+    });
+
+    newSocket.on('disconnect', (reason) => {
       console.log('❌ Disconnected from notifications server');
+      console.log('📋 Reason:', reason);
       setIsConnected(false);
     });
+
+    const removeEmojis = (text: string) => {
+      return text.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim();
+    };
 
     // Listen for task reminders
     newSocket.on('task_reminder', (data) => {
       console.log('🔔 Task reminder received:', data);
-      setUnreadCount((prev) => prev + 1);
-      setNotifications((prev) => [data, ...prev].slice(0, 50)); // Keep last 50 notifications
+      setUnreadCount((prev) => {
+        console.log('📊 Unread count:', prev + 1);
+        return prev + 1;
+      });
+      setNotifications((prev) => {
+        const updated = [data, ...prev].slice(0, 50);
+        console.log('📝 Total notifications:', updated.length);
+        return updated;
+      });
       
-      toast.warning(data.message, {
+      toast.warning(removeEmojis(data.message), {
         description: `Prioridad: ${data.task.priority}`,
-        duration: 5000,
-        action: {
-          label: 'Ver tarea',
-          onClick: () => {
-            window.location.href = '/tasks';
-          },
-        },
+        duration: 8000,
       });
     });
 
@@ -92,7 +131,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       setUnreadCount((prev) => prev + 1);
       setNotifications((prev) => [data, ...prev].slice(0, 50));
       
-      toast.info(data.message, {
+      toast.info(removeEmojis(data.message), {
         description: `${data.summary.totalPending} pendientes, ${data.summary.totalInProgress} en progreso`,
         duration: 7000,
       });
@@ -121,8 +160,17 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setUnreadCount(0);
   };
 
+  const clearNotifications = () => {
+    console.log('🗑️ Clearing all notifications');
+    setNotifications([]);
+    setUnreadCount(0);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('notifications');
+    }
+  };
+
   return (
-    <NotificationContext.Provider value={{ socket, isConnected, unreadCount, notifications, markAsRead }}>
+    <NotificationContext.Provider value={{ socket, isConnected, unreadCount, notifications, markAsRead, clearNotifications }}>
       {children}
     </NotificationContext.Provider>
   );

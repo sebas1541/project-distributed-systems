@@ -236,11 +236,14 @@ services:
       - "traefik.http.middlewares.insights-stripprefix.stripprefix.prefixes=/api/insights"
       - "traefik.http.routers.insights-api.service=insights-api-service"
       - "traefik.http.services.insights-api-service.loadbalancer.server.port=3005"
-      # WebSocket routes for notifications
+      # WebSocket routes for notifications - with proper WebSocket headers
       - "traefik.http.routers.insights-ws.rule=PathPrefix(`/notifications`)"
       - "traefik.http.routers.insights-ws.entrypoints=web"
       - "traefik.http.routers.insights-ws.service=insights-ws-service"
       - "traefik.http.services.insights-ws-service.loadbalancer.server.port=3005"
+      # Enable WebSocket support with proper headers
+      - "traefik.http.middlewares.ws-headers.headers.customrequestheaders.X-Forwarded-Proto=http"
+      - "traefik.http.routers.insights-ws.middlewares=ws-headers"
 
 networks:
   smartplanner-network:

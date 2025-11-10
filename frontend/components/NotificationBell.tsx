@@ -3,10 +3,16 @@
 import { Bell, X, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { useState, useRef, useEffect } from 'react';
+import { TaskDetailsModal } from './TaskDetailsModal';
+import { tasksApi } from '@/features/tasks';
+import { Task } from '@/types/task.types';
 
 export function NotificationBell() {
-  const { isConnected, unreadCount, notifications, markAsRead } = useNotifications();
+  const { isConnected, unreadCount, notifications, markAsRead, clearNotifications } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isLoadingTask, setIsLoadingTask] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -56,6 +62,29 @@ export function NotificationBell() {
     if (minutes < 60) return `Hace ${minutes}m`;
     if (hours < 24) return `Hace ${hours}h`;
     return `Hace ${days}d`;
+  };
+
+  const handleTaskClick = async (taskId: string) => {
+    setIsLoadingTask(true);
+    try {
+      const task = await tasksApi.getTask(taskId);
+      setSelectedTask(task);
+      setIsTaskModalOpen(true);
+      setIsOpen(false); // Close notifications dropdown
+    } catch (error) {
+      console.error('Error loading task:', error);
+    } finally {
+      setIsLoadingTask(false);
+    }
+  };
+
+  const handleTaskUpdated = () => {
+    // Refresh notifications or task list if needed
+    console.log('Task updated');
+  };
+
+  const removeEmojis = (text: string) => {
+    return text.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim();
   };
 
   return (
@@ -113,15 +142,19 @@ export function NotificationBell() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-900 font-medium mb-1">
-                          {notification.type === 'TASK_REMINDER' && '⏰ Recordatorio de Tarea'}
-                          {notification.type === 'MORNING_SUMMARY' && '☀️ Resumen Matutino'}
-                          {notification.type === 'INSIGHTS_UPDATE' && '💡 Nueva Información'}
+                          {notification.type === 'TASK_REMINDER' && 'Recordatorio de Tarea'}
+                          {notification.type === 'MORNING_SUMMARY' && 'Resumen Matutino'}
+                          {notification.type === 'INSIGHTS_UPDATE' && 'Nueva Información'}
                         </p>
                         <p className="text-sm text-gray-600 break-words">
-                          {notification.message}
+                          {removeEmojis(notification.message)}
                         </p>
                         {notification.task && (
-                          <div className="mt-2 p-2 bg-yellow-50 rounded text-xs">
+                          <button
+                            onClick={() => handleTaskClick(notification.task!.id)}
+                            disabled={isLoadingTask}
+                            className="mt-2 w-full p-2 bg-yellow-50 hover:bg-yellow-100 rounded text-xs text-left transition-colors cursor-pointer"
+                          >
                             <p className="font-medium text-gray-900">{notification.task.title}</p>
                             <p className="text-gray-500 mt-0.5">
                               Vence: {new Date(notification.task.dueDate).toLocaleString('es-CO', {
@@ -129,7 +162,7 @@ export function NotificationBell() {
                                 timeStyle: 'short'
                               })}
                             </p>
-                          </div>
+                          </button>
                         )}
                         <p className="text-xs text-gray-400 mt-2">
                           {formatTime(notification.timestamp)}
@@ -144,20 +177,36 @@ export function NotificationBell() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-3 border-t border-gray-200 bg-gray-50">
+            <div className="p-3 border-t border-gray-200 bg-gray-50 flex gap-2">
               <button
                 onClick={() => {
                   markAsRead();
+                }}
+                className="flex-1 text-center text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors py-2 hover:bg-gray-100 rounded"
+              >
+                Marcar como leídas
+              </button>
+              <button
+                onClick={() => {
+                  clearNotifications();
                   setIsOpen(false);
                 }}
-                className="w-full text-center text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                className="flex-1 text-center text-sm text-red-600 hover:text-red-700 font-medium transition-colors py-2 hover:bg-red-50 rounded"
               >
-                Marcar todas como leídas
+                Limpiar todas
               </button>
             </div>
           )}
         </div>
       )}
+
+      {/* Task Details Modal */}
+      <TaskDetailsModal
+        task={selectedTask}
+        open={isTaskModalOpen}
+        onOpenChange={setIsTaskModalOpen}
+        onTaskUpdated={handleTaskUpdated}
+      />
     </div>
   );
 }
