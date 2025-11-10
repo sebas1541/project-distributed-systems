@@ -167,6 +167,8 @@ Sé específico, útil y positivo en tus observaciones.`;
 CONTEXTO ACTUAL:
 📅 Fecha: ${currentDate}
 🕐 Hora: ${currentTime}
+⚠️ IMPORTANTE: La hora mostrada es UTC. El usuario está en Colombia (UTC-5), así que RESTA 5 HORAS para el saludo correcto.
+   Ejemplo: Si son las 22:15 UTC → Son las 17:15 en Colombia (5:15 p.m.) → Saluda con "Buenas tardes"
 
 TAREAS DEL USUARIO (${tasks.length} total):
 ${tasks.map(t => {

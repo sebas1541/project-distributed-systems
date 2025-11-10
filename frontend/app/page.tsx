@@ -9,11 +9,15 @@ import { Activity, CheckCircle, Clock, TrendingUp, ArrowRight } from "lucide-rea
 import { tasksApi } from '@/features/tasks';
 import { Task, TaskStatus } from '@/types/task.types';
 import { GoogleCalendarPrompt } from '@/components/GoogleCalendarPrompt';
+import { TaskCalendarView } from '@/components/TaskCalendarView';
+import { TaskDetailsModal } from '@/components/TaskDetailsModal';
 
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCalendarPrompt, setShowCalendarPrompt] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showTaskModal, setShowTaskModal] = useState(false);
 
   useEffect(() => {
     loadTasks();
@@ -66,6 +70,15 @@ export default function Home() {
     }
   };
 
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setShowTaskModal(true);
+  };
+
+  const handleTaskUpdated = () => {
+    loadTasks();
+  };
+
   const completedTasks = tasks.filter(t => t.status === TaskStatus.COMPLETED).length;
   const pendingTasks = tasks.filter(t => t.status === TaskStatus.PENDING).length;
   const inProgressTasks = tasks.filter(t => t.status === TaskStatus.IN_PROGRESS).length;
@@ -87,8 +100,10 @@ export default function Home() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Side - Stats and Recent Tasks (2/3 width on desktop) */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
               <Card>
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between">
@@ -146,54 +161,71 @@ export default function Home() {
               </Card>
             </div>
 
-            {tasks.length > 0 && (
-              <Card>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between mb-3 sm:mb-4">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                      Tareas Recientes
-                    </h3>
-                    <Link href="/tasks">
-                      <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
-                        Ver todas
-                        <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
-                      </Button>
-                    </Link>
-                  </div>
-                  <div className="space-y-2 sm:space-y-3">
-                    {tasks.slice(0, 5).map((task) => (
-                      <div
-                        key={task.id}
-                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 text-sm sm:text-base break-words">{task.title}</p>
-                          {task.description && (
-                            <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
-                          )}
-                        </div>
-                        <span
-                          className={`inline-block px-2 sm:px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                            task.status === TaskStatus.COMPLETED
-                              ? 'bg-green-100 text-green-700'
-                              : task.status === TaskStatus.IN_PROGRESS
-                              ? 'bg-purple-100 text-purple-700'
-                              : 'bg-orange-100 text-orange-700'
-                          }`}
+              {tasks.length > 0 && (
+                <Card>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                        Tareas Recientes
+                      </h3>
+                      <Link href="/tasks">
+                        <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
+                          Ver todas
+                          <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
+                        </Button>
+                      </Link>
+                    </div>
+                    <div className="space-y-2 sm:space-y-3">
+                      {tasks.slice(0, 5).map((task) => (
+                        <div
+                          key={task.id}
+                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                          onClick={() => handleTaskClick(task)}
                         >
-                          {task.status === TaskStatus.COMPLETED
-                            ? 'Completada'
-                            : task.status === TaskStatus.IN_PROGRESS
-                            ? 'En Progreso'
-                            : 'Pendiente'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 text-sm sm:text-base break-words">{task.title}</p>
+                            {task.description && (
+                              <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
+                            )}
+                          </div>
+                          <span
+                            className={`inline-block px-2 sm:px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                              task.status === TaskStatus.COMPLETED
+                                ? 'bg-green-100 text-green-700'
+                                : task.status === TaskStatus.IN_PROGRESS
+                                ? 'bg-purple-100 text-purple-700'
+                                : 'bg-orange-100 text-orange-700'
+                            }`}
+                          >
+                            {task.status === TaskStatus.COMPLETED
+                              ? 'Completada'
+                              : task.status === TaskStatus.IN_PROGRESS
+                              ? 'En Progreso'
+                              : 'Pendiente'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Right Side - Calendar View (1/3 width on desktop, hidden on mobile) */}
+            <div className="hidden lg:block">
+              <Card className="sticky top-6">
+                <CardContent className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Calendario de Tareas
+                  </h3>
+                  <TaskCalendarView 
+                    tasks={tasks}
+                    onTaskClick={handleTaskClick}
+                  />
                 </CardContent>
               </Card>
-            )}
-          </>
+            </div>
+          </div>
         )}
       </main>
 
@@ -201,6 +233,14 @@ export default function Home() {
       <GoogleCalendarPrompt 
         open={showCalendarPrompt} 
         onClose={() => setShowCalendarPrompt(false)} 
+      />
+
+      {/* Task Details Modal */}
+      <TaskDetailsModal
+        task={selectedTask}
+        open={showTaskModal}
+        onOpenChange={setShowTaskModal}
+        onTaskUpdated={handleTaskUpdated}
       />
     </AuthenticatedLayout>
   );
