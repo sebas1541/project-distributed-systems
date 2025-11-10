@@ -110,6 +110,15 @@ export class RabbitMQService implements OnModuleInit {
                 };
                 this.tasks.set(task.id, task);
                 this.logger.log(`Task ${routingKey.split('.')[1]}: ${task.title} (ID: ${task.id})`);
+                
+                // Emit WebSocket event to notify frontend
+                if (routingKey === 'task.created') {
+                  this.notificationsGateway.emitToUser(
+                    task.userId,
+                    'task_created',
+                    { taskId: task.id, title: task.title }
+                  );
+                }
                 break;
               
               case 'task.deleted':

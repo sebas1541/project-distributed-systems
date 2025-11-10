@@ -14,6 +14,7 @@ import { CreateTaskModal } from '@/components/CreateTaskModal';
 import { TaskCalendarView } from '@/components/TaskCalendarView';
 import { TaskDetailsModal } from '@/components/TaskDetailsModal';
 import { InsightsButton } from '@/components/InsightsButton';
+import { useNotifications } from '@/contexts/NotificationContext';
 
 type ViewMode = 'list' | 'calendar';
 
@@ -27,6 +28,7 @@ export default function TasksPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const { socket } = useNotifications();
 
   useEffect(() => {
     loadTasks();
@@ -35,6 +37,22 @@ export default function TasksPage() {
   useEffect(() => {
     filterTasks();
   }, [tasks, searchQuery, activeTab]);
+
+  // Listen for task creation events via WebSocket to auto-refresh
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleTaskCreatedEvent = (data: any) => {
+      console.log('🔔 Task created event received via WebSocket, refreshing list...', data);
+      loadTasks();
+    };
+
+    socket.on('task_created', handleTaskCreatedEvent);
+
+    return () => {
+      socket.off('task_created', handleTaskCreatedEvent);
+    };
+  }, [socket]);
 
   const loadTasks = async () => {
     try {
@@ -74,8 +92,15 @@ export default function TasksPage() {
     setFilteredTasks(filtered);
   };
 
-  const handleTaskCreated = () => {
-    loadTasks();
+  const handleTaskCreated = async () => {
+    // Immediately reload
+    await loadTasks();
+    
+    // Also reload after a short delay to catch any async updates from RabbitMQ
+    setTimeout(async () => {
+      await loadTasks();
+      console.log('🔄 Tasks reloaded after voice creation');
+    }, 1500);
   };
 
   const handleTaskUpdated = () => {
