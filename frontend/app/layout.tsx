@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/features/auth";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -9,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Smart Planner AI - Gestión Inteligente de Tareas",
-  description: "Aplicación web distribuida e inteligente para gestionar tareas, recordatorios y eventos mediante lenguaje natural.",
+  title: "Quickie Tasks",
+  description: "Agenda tus tareas con IA",
 };
 
 export default function RootLayout({
@@ -26,9 +28,12 @@ export default function RootLayout({
   <html lang="es" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
-          <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
-            {children}
-          </div>
+          <NotificationProvider>
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
+              {children}
+            </div>
+            <Toaster position="top-center" richColors />
+          </NotificationProvider>
         </AuthProvider>
       </body>
     </html>

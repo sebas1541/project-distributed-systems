@@ -153,11 +153,11 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 flex items-center justify-center animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[100] bg-white flex items-center justify-center animate-in fade-in duration-300">
       {/* Close button */}
       <button
         onClick={handleClose}
-        className="absolute top-6 right-6 text-white/80 hover:text-white transition-colors"
+        className="absolute top-6 right-6 text-gray-600 hover:text-black transition-colors"
         aria-label="Close"
       >
         <X className="h-8 w-8" />
@@ -167,16 +167,16 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
         {/* Status text */}
         <div className="text-center">
           {error ? (
-            <div className="text-white text-xl font-medium mb-2">⚠️ Error</div>
+            <div className="text-black text-xl font-medium mb-2">⚠️ Error</div>
           ) : recordingState === 'recording' ? (
             <>
-              <div className="text-white/90 text-lg mb-2">Escuchando...</div>
-              <div className="text-white font-bold text-3xl">{formatTime(recordingTime)}</div>
+              <div className="text-gray-700 text-lg mb-2">Escuchando...</div>
+              <div className="text-black font-bold text-3xl">{formatTime(recordingTime)}</div>
             </>
           ) : recordingState === 'processing' ? (
-            <div className="text-white text-xl font-medium">Procesando...</div>
+            <div className="text-black text-xl font-medium">Procesando...</div>
           ) : (
-            <div className="text-white text-xl font-medium">Preparando...</div>
+            <div className="text-black text-xl font-medium">Preparando...</div>
           )}
         </div>
 
@@ -184,7 +184,7 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
                 {/* Voice wave visualization */}
         <div className="flex items-center justify-center gap-2 h-32">
           {error ? (
-            <div className="text-white/80 text-center max-w-md">{error}</div>
+            <div className="text-gray-700 text-center max-w-md">{error}</div>
           ) : (
             Array.from({ length: 5 }).map((_, i) => {
               const heightMultiplier = recordingState === 'recording' 
@@ -194,7 +194,7 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
               return (
                 <div
                   key={i}
-                  className="bg-white rounded-full transition-all duration-100"
+                  className="bg-black rounded-full transition-all duration-100"
                   style={{
                     width: '12px',
                     height: `${heightMultiplier * 120}px`,
@@ -208,7 +208,7 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
 
         {/* Recording indicator */}
         {recordingState === 'recording' && !error && (
-          <div className="flex items-center gap-2 text-white/90">
+          <div className="flex items-center gap-2 text-gray-700">
             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
             <span className="text-sm">Grabando...</span>
           </div>
@@ -216,7 +216,7 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
 
         {/* Processing spinner */}
         {recordingState === 'processing' && (
-          <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-gray-300 border-t-black rounded-full animate-spin" />
         )}
 
         {/* Controls */}
@@ -224,7 +224,7 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
           <Button
             onClick={stopRecording}
             size="lg"
-            className="bg-white text-blue-600 hover:bg-white/90 rounded-full h-16 w-16 shadow-xl"
+            className="bg-black text-white hover:bg-gray-800 rounded-full h-16 w-16 shadow-xl"
           >
             <Square className="h-6 w-6" />
           </Button>
@@ -234,7 +234,7 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
         {error && (
           <Button
             onClick={handleClose}
-            className="bg-white text-blue-600 hover:bg-white/90"
+            className="bg-black text-white hover:bg-gray-800"
           >
             Cerrar
           </Button>
@@ -242,7 +242,7 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
 
         {/* Instructions */}
         {recordingState === 'recording' && !error && (
-          <p className="text-white/70 text-sm text-center max-w-md">
+          <p className="text-gray-600 text-sm text-center max-w-md">
             Habla claramente para describir tu tarea.<br />
             Presiona el botón para detener la grabación.
           </p>

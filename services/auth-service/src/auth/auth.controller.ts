@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, Res, Query } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -15,6 +16,25 @@ export class AuthController {
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
+  }
+
+  @Get('google')
+  googleAuth(@Res() res: Response) {
+    const authUrl = this.authService.getGoogleAuthUrl();
+    res.redirect(authUrl);
+  }
+
+  @Get('google/callback')
+  async googleAuthCallback(@Query('code') code: string, @Res() res: Response) {
+    try {
+      const result = await this.authService.googleLogin(code);
+      const frontendUrl = process.env.FRONTEND_URL || process.env.FRONTEND_TEST_URL;
+      // Redirect to frontend with token
+      res.redirect(`${frontendUrl}/auth/callback?token=${result.access_token}&user=${encodeURIComponent(JSON.stringify(result.user))}`);
+    } catch (error) {
+      const frontendUrl = process.env.FRONTEND_URL || process.env.FRONTEND_TEST_URL;
+      res.redirect(`${frontendUrl}/login?error=google_auth_failed`);
+    }
   }
 
   @UseGuards(JwtAuthGuard)

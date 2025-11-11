@@ -1,8 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ModuleRef } from '@nestjs/core';
 import { TasksModule } from './tasks/tasks.module';
 import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
+import { TasksService } from './tasks/tasks.service';
+import { RabbitmqPublisherService } from './rabbitmq/rabbitmq-publisher.service';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -26,4 +29,13 @@ import { HealthController } from './health.controller';
   ],
   controllers: [HealthController],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(private moduleRef: ModuleRef) {}
+
+  onModuleInit() {
+    // Wire RabbitMQ publisher to TasksService
+    const tasksService = this.moduleRef.get(TasksService, { strict: false });
+    const rabbitmqPublisher = this.moduleRef.get(RabbitmqPublisherService, { strict: false });
+    tasksService.setRabbitmqPublisher(rabbitmqPublisher);
+  }
+}

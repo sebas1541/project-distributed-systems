@@ -8,7 +8,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   password: string;
 
   @Column()
@@ -16,6 +16,12 @@ export class User {
 
   @Column()
   lastName: string;
+
+  @Column({ nullable: true })
+  googleId: string;
+
+  @Column({ nullable: true })
+  picture: string;
 
   @Column({ default: true })
   isActive: boolean;

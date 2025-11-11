@@ -47,4 +47,9 @@ export class TasksController {
     const userId = req.headers['x-user-id'] || 'default-user';
     return this.tasksService.remove(id, userId);
   }
+
+  @Post('republish')
+  async republishAll() {
+    return this.tasksService.republishAllTasks();
+  }
 }

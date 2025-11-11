@@ -1,134 +1,95 @@
 # Smart Planner AI
 
-Gestor de tareas potenciado con IA, con entrada de voz y procesamiento de lenguaje natural.
+Task manager with voice input and AI insights.
 
-**Equipo**: Natalia Bernal, Sebastián Cañón Castellanos
+**Team**: Natalia Bernal, Sebastián Cañón Castellanos
 
-## Características
+## Quick Start
 
-- Voz a Tarea: Habla para crear tareas (Whisper.cpp + Ollama LLM)
-- Autenticación JWT
-- Gestión de Tareas: CRUD con prioridades y fechas límite
-- Arquitectura de Microservicios con RabbitMQ
-- Diseño Responsive
-
-## Inicio Rápido
-
-### 1. Instalar Ollama
-
-**macOS:**
-```bash
-brew install ollama
-ollama serve
-ollama pull llama3.1:8b
-```
-
-**Linux:**
-```bash
-curl -fsSL https://ollama.com/install.sh | sh
-ollama serve
-ollama pull llama3.1:8b
-```
-
-**Windows:**
-1. Descargar el instalador de [ollama.com/download](https://ollama.com/download)
-2. Ejecutar el instalador
-3. Abrir PowerShell y ejecutar:
-```powershell
-ollama pull llama3.1:8b
-```
-
-### 2. Iniciar Backend
+### 1. Backend
 ```bash
 git clone https://github.com/sebas1541/project-distributed-systems
 cd project-distributed-systems
-cp .env.example .env  # Editar con tus contraseñas
-docker-compose up -d --build
+docker-compose up --build
 ```
 
-### 3. Iniciar Frontend
+### 2. Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Abrir http://localhost:3000
+Open http://localhost:3000
 
-## Arquitectura
+## Environment Setup
 
-### Servicios
-- **Auth** (3001): Autenticación JWT
-- **Task** (3002): CRUD de tareas
-- **AI** (3003): Whisper + Ollama NLP
-- **Frontend** (3000): Next.js
-
-### Traefik (API Gateway)
-```
-localhost:3000 → Traefik (puerto 80)
-  /api/auth/*  → Servicio Auth
-  /api/tasks/* → Servicio Task
-  /api/ai/*    → Servicio AI
-```
-
-### Flujo RabbitMQ
-```
-Voz → Servicio AI → Whisper → Ollama
-  ↓
-Extraer datos de tarea (título, fecha, prioridad)
-  ↓
-Publicar a cola RabbitMQ "task.create"
-  ↓
-Servicio Task consume → Guardar en PostgreSQL
-```
-
-**Cola**: `task-service-task-create` (durable)  
-**Exchange**: `tasks` (topic)  
-**Routing Key**: `task.create`
-
-## Modelos IA
-
-- **Whisper**: `ggml-small.bin` (465MB) - En Docker
-- **Ollama**: `llama3.1:8b` (4.9GB) - En Mac en `localhost:11434`
-
-## Comandos
-
+Create a `.env` file with:
 ```bash
-# Reconstruir servicio
-docker-compose up -d --build ai-service
+# Google OAuth (for auth + calendar)
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_secret
 
-# Ver logs
-docker-compose logs -f
-
-# Reiniciar todo
-docker-compose down -v && docker system prune -f && docker-compose up -d --build
-
-# Interfaz RabbitMQ
-open http://localhost:15672
+# Google Gemini AI (for insights)
+GEMINI_API_KEY=your_api_key
 ```
 
-## Solución de Problemas
+Get keys from:
+- Google OAuth: [console.cloud.google.com](https://console.cloud.google.com)
+- Gemini API: [aistudio.google.com](https://aistudio.google.com)
 
-**Servicios no inician:**
-```bash
-docker-compose logs
-docker-compose down -v && docker-compose up -d --build
+## How It Works
+
+### Architecture
+5 microservices + frontend communicating through **Traefik** (API Gateway) and **RabbitMQ** (message broker):
+
+```
+Frontend (Next.js) → Traefik → Microservices
+                        ↓
+                    RabbitMQ (events)
 ```
 
-**Ollama no funciona:**
-```bash
-brew services restart ollama
-ps aux | grep ollama
+**Services:**
+- **Auth Service**: JWT authentication
+- **Task Service**: CRUD operations
+- **AI Service**: Voice transcription (Whisper) + NLP
+- **Scheduler Service**: Google Calendar sync
+- **Insights Service**: AI insights (Gemini) + WebSocket notifications
+
+### Traefik Routes
+All backend requests go through Traefik on port 80:
+```
+/api/auth/*      → Auth Service (3001)
+/api/tasks/*     → Task Service (3002)
+/api/ai/*        → AI Service (3003)
+/api/scheduler/* → Scheduler Service (3004)
+/api/insights/*  → Insights Service (3005)
+/notifications   → WebSocket for real-time notifications
 ```
 
-## Stack Tecnológico
+### RabbitMQ Flow
+Event-driven communication between services:
 
-**Backend**: NestJS, TypeScript, PostgreSQL, Redis, RabbitMQ  
-**Frontend**: Next.js 15, React 19, Tailwind CSS  
-**IA**: Whisper.cpp, Ollama, Llama 3.1  
+```
+Voice Recording → AI Service (Whisper + NLP)
+       ↓
+   Extract task data
+       ↓
+   Publish to 'tasks' exchange → task.created
+       ↓
+   ┌──────────────┬──────────────┐
+   ↓              ↓              ↓
+Scheduler     Insights      Task Service
+(Calendar)  (Notifications)   (Database)
+```
+
+**Exchanges**: `tasks`, `notifications`  
+**Queues**: 5 total (insights, scheduler events)  
+**Events**: task.created, task.updated, task.deleted
+
+## Tech Stack
+
+**Backend**: NestJS, PostgreSQL, Redis, RabbitMQ  
+**Frontend**: Next.js 15, React, Tailwind, Socket.IO  
+**AI**: Whisper.cpp, Google Gemini  
 **Infra**: Docker, Traefik
-
-## Enlaces
-
-- [Diagrama de Arquitectura](https://drive.google.com/file/d/1EG13F8j1EkPJFaTDMNI6yVMAld80QVIJ/view?usp=sharing)
-- [Propuesta del Proyecto](https://docs.google.com/document/d/1fnxLbS5zKIFwdc8Tz4KnoruemRsnryi9glD7_ytSo5Y/edit)

@@ -33,4 +33,45 @@ export class UsersService {
   async validatePassword(password: string, hashedPassword: string): Promise<boolean> {
     return bcrypt.compare(password, hashedPassword);
   }
+
+  async findOrCreateGoogleUser(googleData: {
+    googleId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    picture: string;
+  }): Promise<User> {
+    // Try to find by googleId first
+    let user = await this.usersRepository.findOne({ where: { googleId: googleData.googleId } });
+    
+    if (user) {
+      // Update user info if changed
+      user.firstName = googleData.firstName;
+      user.lastName = googleData.lastName;
+      user.picture = googleData.picture;
+      return this.usersRepository.save(user);
+    }
+
+    // Try to find by email (user might have registered with email/password)
+    user = await this.usersRepository.findOne({ where: { email: googleData.email } });
+    
+    if (user) {
+      // Link Google account to existing user
+      user.googleId = googleData.googleId;
+      user.picture = googleData.picture;
+      return this.usersRepository.save(user);
+    }
+
+    // Create new user
+    const newUser = this.usersRepository.create({
+      email: googleData.email,
+      googleId: googleData.googleId,
+      firstName: googleData.firstName,
+      lastName: googleData.lastName,
+      picture: googleData.picture,
+      password: null, // No password for Google OAuth users
+    });
+
+    return this.usersRepository.save(newUser);
+  }
 }
