@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { STORAGE_KEYS } from '@/lib/constants';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
+    // Use the browser location API instead of next/navigation's useSearchParams
+    // to avoid prerendering/runtime suspense issues during the build.
+    const searchParams = new URLSearchParams(window.location.search);
     const token = searchParams.get('token');
     const userStr = searchParams.get('user');
 
@@ -29,7 +31,7 @@ export default function AuthCallbackPage() {
     } else {
       router.push('/login?error=missing_data');
     }
-  }, [searchParams, router]);
+  }, [router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
