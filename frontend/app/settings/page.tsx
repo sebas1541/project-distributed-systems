@@ -11,9 +11,16 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [voiceLanguage, setVoiceLanguage] = useState<'en' | 'es'>('en');
 
   useEffect(() => {
     checkConnectionStatus();
+    
+    // Load saved language preference
+    const savedLanguage = localStorage.getItem('voice-language') as 'en' | 'es';
+    if (savedLanguage) {
+      setVoiceLanguage(savedLanguage);
+    }
     
     // Check if we just came back from OAuth callback
     const params = new URLSearchParams(window.location.search);
@@ -30,6 +37,11 @@ export default function SettingsPage() {
       window.history.replaceState({}, '', '/settings');
     }
   }, []);
+
+  const handleLanguageChange = (language: 'en' | 'es') => {
+    setVoiceLanguage(language);
+    localStorage.setItem('voice-language', language);
+  };
 
   const checkConnectionStatus = async () => {
     try {
@@ -140,6 +152,74 @@ export default function SettingsPage() {
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Correo Electrónico</p>
                     <p className="text-lg font-semibold text-gray-900">{user?.email}</p>
                   </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Voice Language Preference Card */}
+        <Card className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <CardContent className="p-8">
+            <div className="space-y-6">
+              {/* Section Header */}
+              <div className="pb-4 border-b border-gray-100">
+                <h2 className="text-2xl font-bold text-gray-900">Idioma de Voz</h2>
+                <p className="text-sm text-gray-500 mt-1">Selecciona el idioma para las tareas por voz</p>
+              </div>
+
+              {/* Language Selection */}
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Elige el idioma en el que hablarás al crear tareas con el micrófono
+                </p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* English Option */}
+                  <button
+                    onClick={() => handleLanguageChange('en')}
+                    className={`p-6 rounded-xl border-2 transition-all duration-200 ${
+                      voiceLanguage === 'en'
+                        ? 'border-yellow-500 bg-yellow-50 shadow-md'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="text-4xl">🇺🇸</div>
+                      <div className="text-left">
+                        <p className="font-bold text-gray-900 text-lg">English</p>
+                        <p className="text-sm text-gray-600">Voice tasks in English</p>
+                      </div>
+                      {voiceLanguage === 'en' && (
+                        <div className="ml-auto">
+                          <CheckCircle className="h-6 w-6 text-yellow-500" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Spanish Option */}
+                  <button
+                    onClick={() => handleLanguageChange('es')}
+                    className={`p-6 rounded-xl border-2 transition-all duration-200 ${
+                      voiceLanguage === 'es'
+                        ? 'border-yellow-500 bg-yellow-50 shadow-md'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="text-4xl">🇪🇸</div>
+                      <div className="text-left">
+                        <p className="font-bold text-gray-900 text-lg">Español</p>
+                        <p className="text-sm text-gray-600">Tareas por voz en español</p>
+                      </div>
+                      {voiceLanguage === 'es' && (
+                        <div className="ml-auto">
+                          <CheckCircle className="h-6 w-6 text-yellow-500" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
                 </div>
               </div>
             </div>

@@ -18,17 +18,18 @@ export default function AuthenticatedLayout({
 }: AuthenticatedLayoutProps) {
   const [isRecordingOpen, setIsRecordingOpen] = useState(false);
 
-  const handleRecordingComplete = async (audioBlob: Blob) => {
+  const handleRecordingComplete = async (audioBlob: Blob, language: string) => {
     console.log('🎤 Audio recorded:', audioBlob);
     console.log('📊 Audio size:', audioBlob.size, 'bytes');
     console.log('🎵 Audio type:', audioBlob.type);
+    console.log('🌐 Language:', language);
     
     try {
       // Import the AI API
       const { aiApi } = await import('@/lib/aiApi');
       
       console.log('🚀 Sending audio to AI service via Traefik...');
-      const result = await aiApi.transcribe(audioBlob);
+      const result = await aiApi.transcribe(audioBlob, language);
       
       console.log('✅ Transcription received:', result.transcription);
       

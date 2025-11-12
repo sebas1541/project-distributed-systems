@@ -51,14 +51,19 @@ export class TranscribeController {
   async transcribe(
     @UploadedFile() file: Express.Multer.File,
     @Headers('x-user-id') userId?: string,
+    @Headers('x-language') language?: string,
   ) {
     if (!file) {
       throw new BadRequestException('No audio file provided');
     }
 
     try {
+      // Use provided language or default to 'en' (English)
+      const selectedLanguage = language || 'en';
+      this.logger.log(`Transcribing with language: ${selectedLanguage}`);
+      
       // Step 1: Transcribe audio to text
-      const transcription = await this.transcribeService.transcribe(file.path);
+      const transcription = await this.transcribeService.transcribe(file.path, selectedLanguage);
       this.logger.log(`Transcription: ${transcription}`);
 
       // Step 2: Extract task data using NLP

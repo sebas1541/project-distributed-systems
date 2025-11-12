@@ -20,8 +20,8 @@ export class TranscribeService {
   private readonly language =
     process.env.WHISPER_LANGUAGE?.trim() || 'auto';
 
-  async transcribe(audioFilePath: string): Promise<string> {
-    this.logger.log(`Starting transcription for: ${audioFilePath}`);
+  async transcribe(audioFilePath: string, language: string = 'en'): Promise<string> {
+    this.logger.log(`Starting transcription for: ${audioFilePath} in language: ${language}`);
 
     let wavFilePath: string | null = null;
 
@@ -33,8 +33,8 @@ export class TranscribeService {
       this.logger.log(`Converting audio: ${convertCommand}`);
       await execAsync(convertCommand);
 
-      // Call whisper.cpp with the WAV file
-      const command = `${this.whisperPath} -m ${this.modelPath} -f ${wavFilePath} --language ${this.language} --output-txt --output-file /tmp/whisper-output`;
+      // Call whisper.cpp with the WAV file with specific language
+      const command = `${this.whisperPath} -m ${this.modelPath} -f ${wavFilePath} --language ${language} --output-txt --output-file /tmp/whisper-output`;
 
       this.logger.log(`Executing command: ${command}`);
 

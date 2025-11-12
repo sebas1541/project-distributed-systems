@@ -16,18 +16,78 @@ services:
     networks:
       - smartplanner-network
 
-  # PostgreSQL Database
-  postgres:
+  # PostgreSQL Database - Auth Service
+  postgres-auth:
     image: postgres:15-alpine
-    container_name: smartplanner-postgres
+    container_name: smartplanner-postgres-auth
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-smartplanner}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartplanner_password}
-      POSTGRES_DB: ${POSTGRES_DB:-smartplanner_db}
+      POSTGRES_DB: auth_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-auth-data:/var/lib/postgresql/data
+    networks:
+      - smartplanner-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-smartplanner}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Database - Task Service
+  postgres-task:
+    image: postgres:15-alpine
+    container_name: smartplanner-postgres-task
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-smartplanner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartplanner_password}
+      POSTGRES_DB: task_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-task-data:/var/lib/postgresql/data
+    networks:
+      - smartplanner-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-smartplanner}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Database - Scheduler Service
+  postgres-scheduler:
+    image: postgres:15-alpine
+    container_name: smartplanner-postgres-scheduler
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-smartplanner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartplanner_password}
+      POSTGRES_DB: scheduler_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-scheduler-data:/var/lib/postgresql/data
+    networks:
+      - smartplanner-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-smartplanner}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL Database - Insights Service
+  postgres-insights:
+    image: postgres:15-alpine
+    container_name: smartplanner-postgres-insights
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-smartplanner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartplanner_password}
+      POSTGRES_DB: insights_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-insights-data:/var/lib/postgresql/data
     networks:
       - smartplanner-network
     healthcheck:
@@ -83,7 +143,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${AUTH_SERVICE_PORT:-3001}
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgresql://smartplanner:smartplanner_password@postgres-auth:5432/auth_db
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
@@ -98,7 +158,7 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
       FRONTEND_TEST_URL: ${FRONTEND_TEST_URL:-http://localhost:3000}
     depends_on:
-      postgres:
+      postgres-auth:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -121,14 +181,14 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${TASK_SERVICE_PORT:-3002}
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgresql://smartplanner:smartplanner_password@postgres-task:5432/task_db
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
       RABBITMQ_URL: ${RABBITMQ_URL}
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
-      postgres:
+      postgres-task:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -180,12 +240,12 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: 3004
-      # Database connection (shared with task-service)
-      DATABASE_HOST: postgres
+      # Database connection (scheduler-specific)
+      DATABASE_HOST: postgres-scheduler
       DATABASE_PORT: 5432
       DATABASE_USER: ${POSTGRES_USER:-smartplanner}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-smartplanner_password}
-      DATABASE_NAME: ${POSTGRES_DB:-smartplanner_db}
+      DATABASE_NAME: scheduler_db
       # Google OAuth credentials
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
@@ -196,7 +256,7 @@ services:
       # RabbitMQ connection
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-smartplanner}:${RABBITMQ_PASSWORD:-rabbitmq_password}@rabbitmq:5672
     depends_on:
-      postgres:
+      postgres-scheduler:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -250,6 +310,9 @@ networks:
     driver: bridge
 
 volumes:
-  postgres-data:
+  postgres-auth-data:
+  postgres-task-data:
+  postgres-scheduler-data:
+  postgres-insights-data:
   redis-data:
   rabbitmq-data:

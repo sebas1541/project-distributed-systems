@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 interface VoiceRecordingModalProps {
   open: boolean;
   onClose: () => void;
-  onRecordingComplete: (audioBlob: Blob) => void;
+  onRecordingComplete: (audioBlob: Blob, language: string) => void;
 }
 
 type RecordingState = 'idle' | 'recording' | 'stopped' | 'processing';
@@ -17,6 +17,7 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
   const [audioLevel, setAudioLevel] = useState(0);
   const [recordingTime, setRecordingTime] = useState(0);
   const [error, setError] = useState<string>('');
+  const [language, setLanguage] = useState<'en' | 'es'>('en');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -28,6 +29,15 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
   // Start recording when modal opens
   useEffect(() => {
     if (open) {
+      // Load language preference from localStorage
+      const savedLanguage = localStorage.getItem('voice-language') as 'en' | 'es';
+      console.log('🔍 VoiceRecordingModal: Loading language from localStorage:', savedLanguage);
+      if (savedLanguage) {
+        setLanguage(savedLanguage);
+        console.log('✅ VoiceRecordingModal: Language set to:', savedLanguage);
+      } else {
+        console.log('⚠️ VoiceRecordingModal: No saved language, using default: en');
+      }
       startRecording();
     } else {
       cleanup();
@@ -40,7 +50,7 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
-    if (audioContextRef.current) {
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
       audioContextRef.current.close();
     }
     if (animationFrameRef.current) {
@@ -78,8 +88,9 @@ export function VoiceRecordingModal({ open, onClose, onRecordingComplete }: Voic
         
         if (audioBlob.size > 0) {
           setRecordingState('processing');
+          console.log('🎤 VoiceRecordingModal: Sending audio with language:', language);
           setTimeout(() => {
-            onRecordingComplete(audioBlob);
+            onRecordingComplete(audioBlob, language);
           }, 500);
         }
       };

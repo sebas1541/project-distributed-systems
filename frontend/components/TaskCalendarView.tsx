@@ -168,7 +168,7 @@ export function TaskCalendarView({ tasks, onTaskClick }: TaskCalendarViewProps) 
           <div className="grid grid-cols-7 gap-0 mb-2">
             {dayNames.map((day, idx) => (
               <div
-                key={day}
+                key={`day-${idx}`}
                 className="text-center text-[10px] sm:text-sm font-semibold text-gray-500 sm:text-gray-600 py-1 sm:py-2"
               >
                 <span className="sm:hidden">{day}</span>

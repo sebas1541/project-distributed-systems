@@ -18,7 +18,9 @@ export const aiApi = {
   /**
    * Transcribe audio file using Whisper and create task via NLP
    */
-  async transcribe(audioBlob: Blob): Promise<TranscriptionResponse> {
+  async transcribe(audioBlob: Blob, language: string = 'en'): Promise<TranscriptionResponse> {
+    console.log('🌍 aiApi.transcribe called with language:', language);
+    
     const formData = new FormData();
     formData.append('audio', audioBlob, 'recording.webm');
 
@@ -30,6 +32,9 @@ export const aiApi = {
     if (user?.id) {
       headers['x-user-id'] = user.id;
     }
+    headers['x-language'] = language;
+    
+    console.log('📤 Sending headers:', headers);
 
     // AI service runs locally but proxied through Traefik
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost'}${API_ENDPOINTS.AI.TRANSCRIBE}`, {
