@@ -113,6 +113,16 @@ export class RabbitMQConsumerService implements OnModuleInit {
   private async handleTaskCreated(event: TaskEvent) {
     this.logger.log(`Task created: ${event.taskId} for user ${event.userId}`);
 
+    // Check if mapping already exists to prevent duplicates
+    const existingMapping = await this.mappingRepository.findOne({
+      where: { taskId: event.taskId, userId: event.userId },
+    });
+
+    if (existingMapping) {
+      this.logger.log(`Mapping already exists for task ${event.taskId}, skipping creation`);
+      return;
+    }
+
     const isConnected = await this.calendarService.isConnected(event.userId);
     if (!isConnected) {
       this.logger.log(`User ${event.userId} not connected to Google Calendar`);

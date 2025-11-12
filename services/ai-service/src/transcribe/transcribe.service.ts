@@ -17,6 +17,8 @@ export class TranscribeService {
     __dirname,
     '../../whisper.cpp/models/ggml-small.bin',
   );
+  private readonly language =
+    process.env.WHISPER_LANGUAGE?.trim() || 'auto';
 
   async transcribe(audioFilePath: string): Promise<string> {
     this.logger.log(`Starting transcription for: ${audioFilePath}`);
@@ -32,7 +34,7 @@ export class TranscribeService {
       await execAsync(convertCommand);
 
       // Call whisper.cpp with the WAV file
-      const command = `${this.whisperPath} -m ${this.modelPath} -f ${wavFilePath} --output-txt --output-file /tmp/whisper-output`;
+      const command = `${this.whisperPath} -m ${this.modelPath} -f ${wavFilePath} --language ${this.language} --output-txt --output-file /tmp/whisper-output`;
 
       this.logger.log(`Executing command: ${command}`);
 
@@ -90,4 +92,3 @@ export class TranscribeService {
     return transcriptionLines.join(' ').trim();
   }
 }
-
