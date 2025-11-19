@@ -210,6 +210,10 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${AI_SERVICE_PORT:-3003}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      # Redis connection for logging
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
       # Whisper.cpp built inside container
       WHISPER_PATH: /app/whisper.cpp/build/bin/whisper-cli
       WHISPER_MODEL_PATH: /app/whisper.cpp/models/ggml-small.bin
@@ -246,6 +250,10 @@ services:
       DATABASE_USER: ${POSTGRES_USER:-smartplanner}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-smartplanner_password}
       DATABASE_NAME: scheduler_db
+      # Redis connection for logging
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
       # Google OAuth credentials
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
@@ -278,6 +286,10 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: 3005
+      # Redis connection for logging
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
       # Google Gemini AI for insights
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       # RabbitMQ connection

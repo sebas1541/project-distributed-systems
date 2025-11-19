@@ -1,8 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { RedisLoggerService } from './redis-logger.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: new RedisLoggerService('ai-service'),
+  });
   
   // Enable CORS for frontend
   app.enableCors({

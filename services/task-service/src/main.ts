@@ -1,9 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { RedisLoggerService } from './redis-logger.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: new RedisLoggerService('task-service'),
+  });
   
   app.enableCors();
   app.useGlobalPipes(new ValidationPipe({
